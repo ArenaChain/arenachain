@@ -1,0 +1,28 @@
+# Rust / Anchor
+target/
+.anchor/
+test-ledger/
+**/*.rs.bk
+
+# Node / Next.js
+node_modules/
+.next/
+dist/
+
+# Secrets and keys
+.env
+.env.*
+!.env.example
+*-keypair.json
+id.json
+
+# Claude Code (personal overrides)
+.claude/settings.local.json
+.claude/claude-security-guidance.local.md
+
+# OS
+.DS_Store
+
+# Anchor / Surfpool
+.surfpool/
+.yarn/

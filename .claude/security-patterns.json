@@ -1,0 +1,27 @@
+{
+  "patterns": [
+    {
+      "rule_name": "unchecked_sysvar_loader",
+      "regex": "load_instruction_at\\(|load_current_index\\(",
+      "reminder": "Use load_instruction_at_checked / load_current_index_checked with an address-checked instructions sysvar. The unchecked loaders let an attacker pass a fake sysvar and forge signature checks (Wormhole, Feb 2022)."
+    },
+    {
+      "rule_name": "unchecked_account",
+      "substrings": ["UncheckedAccount<", "AccountInfo<'info>"],
+      "paths": ["**/programs/**"],
+      "reminder": "Unchecked account: add a /// CHECK: comment and explicit owner or address validation, or use Account<'info, T> so Anchor checks owner and discriminator."
+    },
+    {
+      "rule_name": "init_if_needed",
+      "substrings": ["init_if_needed"],
+      "paths": ["**/programs/**"],
+      "reminder": "init_if_needed allows reinitialization unless existing state is checked. Prefer init, or prove the account is fresh."
+    },
+    {
+      "rule_name": "unchecked_token_transfer",
+      "regex": "token(_interface)?::transfer\\(",
+      "paths": ["**/programs/**"],
+      "reminder": "Use transfer_checked (it verifies mint and decimals) for every USDC transfer."
+    }
+  ]
+}

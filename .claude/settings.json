@@ -1,0 +1,14 @@
+{
+  "env": {
+    "NO_DNA": "1"
+  },
+  "enabledMcpjsonServers": [
+    "solana-mcp-server"
+  ],
+  "enabledPlugins": {
+    "security-guidance@claude-plugins-official": true,
+    "claude-security@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  }
+}

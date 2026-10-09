@@ -1,0 +1,25 @@
+skip_local_validator = true
+
+[toolchain]
+anchor_version = "1.1.2"
+solana_version = "3.1.10"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+arenachain = "HzNHCFVGQu9SKEeAo1UPLV5itD7TSYGoVtmYz4MJeKsw"
+
+[programs.devnet]
+arenachain = "HzNHCFVGQu9SKEeAo1UPLV5itD7TSYGoVtmYz4MJeKsw"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+# LiteSVM unit tests, then the Surfpool e2e (embedded surfnet, no external validator).
+test = "cargo test -p arenachain && npm run test:e2e"
+
+[hooks]
