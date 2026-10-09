@@ -17,6 +17,8 @@ import {
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
+  getArrayDecoder,
+  getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getI32Decoder,
@@ -61,8 +63,13 @@ export type PlayerProfile = {
   elo: number;
   wins: number;
   losses: number;
-  forfeits30d: number;
-  lastForfeitAt: bigint;
+  totalForfeits: number;
+  /**
+   * The two most recent forfeit times, newest first (0 = none). Enough to count forfeits
+   * in the last 30 days exactly for the three-step penalty ladder.
+   */
+  recentForfeits: Array<bigint>;
+  /** 0..=100, starts at 100. */
   reputation: number;
   bannedUntil: bigint;
   /** SteamID64; 0 means unlinked. */
@@ -76,8 +83,13 @@ export type PlayerProfileArgs = {
   elo: number;
   wins: number;
   losses: number;
-  forfeits30d: number;
-  lastForfeitAt: number | bigint;
+  totalForfeits: number;
+  /**
+   * The two most recent forfeit times, newest first (0 = none). Enough to count forfeits
+   * in the last 30 days exactly for the three-step penalty ladder.
+   */
+  recentForfeits: Array<number | bigint>;
+  /** 0..=100, starts at 100. */
   reputation: number;
   bannedUntil: number | bigint;
   /** SteamID64; 0 means unlinked. */
@@ -95,8 +107,8 @@ export function getPlayerProfileEncoder(): FixedSizeEncoder<PlayerProfileArgs> {
       ["elo", getU32Encoder()],
       ["wins", getU32Encoder()],
       ["losses", getU32Encoder()],
-      ["forfeits30d", getU8Encoder()],
-      ["lastForfeitAt", getI64Encoder()],
+      ["totalForfeits", getU32Encoder()],
+      ["recentForfeits", getArrayEncoder(getI64Encoder(), { size: 2 })],
       ["reputation", getI32Encoder()],
       ["bannedUntil", getI64Encoder()],
       ["steamId", getU64Encoder()],
@@ -115,8 +127,8 @@ export function getPlayerProfileDecoder(): FixedSizeDecoder<PlayerProfile> {
     ["elo", getU32Decoder()],
     ["wins", getU32Decoder()],
     ["losses", getU32Decoder()],
-    ["forfeits30d", getU8Decoder()],
-    ["lastForfeitAt", getI64Decoder()],
+    ["totalForfeits", getU32Decoder()],
+    ["recentForfeits", getArrayDecoder(getI64Decoder(), { size: 2 })],
     ["reputation", getI32Decoder()],
     ["bannedUntil", getI64Decoder()],
     ["steamId", getU64Decoder()],
@@ -191,5 +203,5 @@ export async function fetchAllMaybePlayerProfile(
 }
 
 export function getPlayerProfileSize(): number {
-  return 90;
+  return 101;
 }

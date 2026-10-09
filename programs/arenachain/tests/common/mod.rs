@@ -138,6 +138,7 @@ pub struct Env {
     pub admin: Keypair,
     pub mint: Pubkey,
     pub server: Keypair,
+    pub treasury: Keypair,
 }
 
 impl Env {
@@ -175,6 +176,7 @@ impl Env {
             admin,
             mint: Pubkey::default(),
             server: Keypair::new(),
+            treasury: Keypair::new(),
         };
         env.set_time(START_TS);
         env.mint = env.create_mint();
@@ -320,6 +322,7 @@ impl Env {
             arenachain::instruction::AdminInitializeConfig {
                 admin: self.admin.pubkey(),
                 dispute_authority: self.admin.pubkey(),
+                treasury: self.treasury.pubkey(),
                 params,
             },
             arenachain::accounts::AdminInitializeConfig {
@@ -551,6 +554,8 @@ impl Env {
                 vault: s.vault,
                 player_a_token: s.player_a_token,
                 player_b_token: s.player_b_token,
+                player_a_profile: s.player_a_profile,
+                player_b_profile: s.player_b_profile,
                 fee_vault: s.fee_vault,
                 player_a: s.player_a,
                 instructions_sysvar: s.instructions_sysvar,
@@ -569,6 +574,8 @@ impl Env {
             player_b_token: f.b.token,
             fee_vault: fee_vault_pda(),
             player_a: f.a.kp.pubkey(),
+            player_a_profile: profile_pda(&f.a.kp.pubkey()),
+            player_b_profile: profile_pda(&f.b.kp.pubkey()),
             instructions_sysvar: solana_sdk_ids::sysvar::instructions::ID,
         }
     }
@@ -590,6 +597,61 @@ impl Env {
             self.submit_ix(&accounts, kind, winner, demo),
         ];
         self.send(&ixs, &[&relayer])
+    }
+
+    pub fn refund_expired_ix(&self, f: &Fixture) -> Instruction {
+        ix(
+            arenachain::instruction::RefundExpired {},
+            arenachain::accounts::RefundExpired {
+                arena_match: f.m,
+                mint: self.mint,
+                vault: vault_pda(&f.m),
+                player_a_token: f.a.token,
+                player_b_token: f.b.token,
+                player_a: f.a.kp.pubkey(),
+                token_program: token_program(),
+            },
+        )
+    }
+
+    pub fn refund_expired(&mut self, f: &Fixture) -> TransactionResult {
+        let i = self.refund_expired_ix(f);
+        let relayer = self.wallet();
+        self.send(&[i], &[&relayer])
+    }
+
+    pub fn withdraw_fees_ix(
+        &self,
+        admin: &Pubkey,
+        treasury_token: &Pubkey,
+        amount: u64,
+    ) -> Instruction {
+        ix(
+            arenachain::instruction::AdminWithdrawFees { amount },
+            arenachain::accounts::AdminWithdrawFees {
+                admin: *admin,
+                config: config_pda(),
+                mint: self.mint,
+                fee_vault: fee_vault_pda(),
+                treasury_token: *treasury_token,
+                token_program: token_program(),
+            },
+        )
+    }
+
+    pub fn set_treasury_as(&mut self, admin: &Keypair, new_treasury: Pubkey) -> TransactionResult {
+        let i = ix(
+            arenachain::instruction::AdminSetTreasury { new_treasury },
+            arenachain::accounts::AdminUpdateConfig {
+                admin: admin.pubkey(),
+                config: config_pda(),
+            },
+        );
+        self.send(&[i], &[admin])
+    }
+
+    pub fn profile(&self, wallet: &Pubkey) -> PlayerProfile {
+        self.read(&profile_pda(wallet))
     }
 
     pub fn claim_ix(&self, m: &Pubkey, winner_token: &Pubkey, player_a: &Pubkey) -> Instruction {
@@ -656,4 +718,6 @@ pub struct SubmitAccounts {
     pub fee_vault: Pubkey,
     pub player_a: Pubkey,
     pub instructions_sysvar: Pubkey,
+    pub player_a_profile: Pubkey,
+    pub player_b_profile: Pubkey,
 }

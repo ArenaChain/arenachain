@@ -4,6 +4,7 @@ pub mod errors;
 pub mod events;
 pub mod instructions;
 pub mod payout;
+pub mod rating;
 pub mod state;
 
 use anchor_lang::prelude::*;
@@ -22,14 +23,24 @@ pub mod arenachain {
         ctx: Context<AdminInitializeConfig>,
         admin: Pubkey,
         dispute_authority: Pubkey,
+        treasury: Pubkey,
         params: ConfigParams,
     ) -> Result<()> {
         instructions::admin_initialize_config::handle_admin_initialize_config(
             ctx,
             admin,
             dispute_authority,
+            treasury,
             params,
         )
+    }
+
+    pub fn admin_set_treasury(ctx: Context<AdminUpdateConfig>, new_treasury: Pubkey) -> Result<()> {
+        instructions::admin_update_config::handle_admin_set_treasury(ctx, new_treasury)
+    }
+
+    pub fn admin_withdraw_fees(ctx: Context<AdminWithdrawFees>, amount: u64) -> Result<()> {
+        instructions::admin_withdraw_fees::handle_admin_withdraw_fees(ctx, amount)
     }
 
     pub fn admin_update_config(
@@ -90,5 +101,9 @@ pub mod arenachain {
 
     pub fn claim_payout(ctx: Context<ClaimPayout>) -> Result<()> {
         instructions::claim_payout::handle_claim_payout(ctx)
+    }
+
+    pub fn refund_expired(ctx: Context<RefundExpired>) -> Result<()> {
+        instructions::refund_expired::handle_refund_expired(ctx)
     }
 }

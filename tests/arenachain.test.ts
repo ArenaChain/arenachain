@@ -29,7 +29,11 @@ import {
     findArenaMatchPda,
     findFeeVaultPda,
     findGameServerPda,
+    findProfilePda,
     findVaultPda,
+    fetchPlayerProfile,
+    getAdminWithdrawFeesInstructionAsync,
+    getRefundExpiredInstructionAsync,
     getAdminInitializeConfigInstructionAsync,
     getAdminRegisterServerInstructionAsync,
     getClaimPayoutInstructionAsync,
@@ -54,6 +58,7 @@ let mint: Address;
 let server: KeyPairSigner;
 let gameServer: Address;
 let feeVault: Address;
+let treasury: KeyPairSigner;
 
 type Player = { signer: KeyPairSigner; token: Address };
 
@@ -110,6 +115,8 @@ async function submitSignedResult(arenaMatch: Address, a: Player, b: Player, kin
         playerBToken: b.token,
         feeVault,
         playerA: a.signer.address,
+        playerAProfile: (await findProfilePda({ authority: a.signer.address }))[0],
+        playerBProfile: (await findProfilePda({ authority: b.signer.address }))[0],
         kind,
         winner,
         demoHash,
@@ -152,6 +159,7 @@ before(async () => {
     const rent = await client.rpc.getMinimumBalanceForRentExemption(82n).send();
     client.surfnet.setAccount(mint, Number(rent), new Uint8Array(mintData), TOKEN_PROGRAM_ADDRESS);
 
+    treasury = await generateKeyPairSigner();
     await client.sendTransaction(
         await getAdminInitializeConfigInstructionAsync({
             authority: client.payer,
@@ -159,6 +167,7 @@ before(async () => {
             programData,
             admin: client.payer.address,
             disputeAuthority: client.payer.address,
+            treasury: treasury.address,
             params: { holdThreshold: HOLD_THRESHOLD, holdSecs: HOLD_SECS, resultWindowSecs: 3n * 3600n },
         }),
     );
@@ -227,4 +236,61 @@ test('held payout: claim fails before unlock, succeeds after time travel', async
     const pool = entry * 2n;
     assert.equal(await balance(a.token), pool - (pool * 500n) / 10_000n);
     assert.equal((await fetchMatch(client.rpc, arenaMatch)).data.paidOut, true);
+});
+
+test('Forfeit updates Elo, record and reputation', async () => {
+    const entry = 5n * USDC;
+    const a = await player(entry);
+    const b = await player(entry);
+    const arenaMatch = await startedMatch(a, b, 1n, entry);
+    await submitSignedResult(arenaMatch, a, b, ResultKind.Forfeit, a.signer.address);
+    const pa = await fetchPlayerProfile(client.rpc, (await findProfilePda({ authority: a.signer.address }))[0]);
+    const pb = await fetchPlayerProfile(client.rpc, (await findProfilePda({ authority: b.signer.address }))[0]);
+    assert.equal(pa.data.elo, 1016);
+    assert.equal(pb.data.elo, 984);
+    assert.equal(pa.data.wins, 1);
+    assert.equal(pb.data.losses, 1);
+    assert.equal(pb.data.reputation, 90);
+    assert.equal(pb.data.totalForfeits, 1);
+});
+
+test('expired match: anyone refunds both players after the deadline', async () => {
+    const entry = 7n * USDC;
+    const a = await player(entry);
+    const b = await player(entry);
+    const arenaMatch = await startedMatch(a, b, 1n, entry);
+    const m = await fetchMatch(client.rpc, arenaMatch);
+
+    const refund = () =>
+        getRefundExpiredInstructionAsync({
+            arenaMatch,
+            mint,
+            playerAToken: a.token,
+            playerBToken: b.token,
+            playerA: a.signer.address,
+        });
+    await assert.rejects(async () => client.sendTransaction(await refund()));
+
+    client.surfnet.timeTravelToTimestamp(Number(m.data.resultDeadline + 60n) * 1000);
+    await client.sendTransaction(await refund());
+    assert.equal(await balance(a.token), entry);
+    assert.equal(await balance(b.token), entry);
+    assert.equal((await fetchMatch(client.rpc, arenaMatch)).data.status, MatchStatus.Refunded);
+});
+
+test('admin withdraws collected fees to the treasury', async () => {
+    const collected = await balance(feeVault);
+    assert.ok(collected > 0n, 'earlier tests collected fees');
+    client.surfnet.fundToken(treasury.address, mint, 0);
+    const treasuryToken = address(client.surfnet.getAta(treasury.address, mint));
+    await client.sendTransaction(
+        await getAdminWithdrawFeesInstructionAsync({
+            admin: client.payer,
+            mint,
+            treasuryToken,
+            amount: collected,
+        }),
+    );
+    assert.equal(await balance(treasuryToken), collected);
+    assert.equal(await balance(feeVault), 0n);
 });

@@ -111,7 +111,8 @@ fn create_profile_defaults_and_once() {
     let p: PlayerProfile = env.read(&profile_pda(&w.pubkey()));
     assert_eq!(p.authority, w.pubkey());
     assert_eq!(p.elo, STARTING_ELO);
-    assert_eq!((p.wins, p.losses, p.reputation, p.steam_id), (0, 0, 0, 0));
+    assert_eq!((p.wins, p.losses, p.reputation, p.steam_id), (0, 0, 100, 0));
+    assert_eq!((p.total_forfeits, p.recent_forfeits), (0, [0, 0]));
     assert_eq!(p.created_at, START_TS);
     assert_failed(env.create_profile(&w));
 }

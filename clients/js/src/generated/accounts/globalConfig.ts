@@ -63,6 +63,8 @@ export type GlobalConfig = {
   usdcMint: Address;
   /** Fee vault token account, PDA `["fee_vault"]`, owned by this config. */
   feeVault: Address;
+  /** Wallet whose USDC token account receives withdrawn fees. */
+  treasury: Address;
   /** Pools at or above this amount wait `hold_secs` before payout. */
   holdThreshold: bigint;
   holdSecs: bigint;
@@ -83,6 +85,8 @@ export type GlobalConfigArgs = {
   usdcMint: Address;
   /** Fee vault token account, PDA `["fee_vault"]`, owned by this config. */
   feeVault: Address;
+  /** Wallet whose USDC token account receives withdrawn fees. */
+  treasury: Address;
   /** Pools at or above this amount wait `hold_secs` before payout. */
   holdThreshold: number | bigint;
   holdSecs: number | bigint;
@@ -103,6 +107,7 @@ export function getGlobalConfigEncoder(): FixedSizeEncoder<GlobalConfigArgs> {
       ["disputeAuthority", getAddressEncoder()],
       ["usdcMint", getAddressEncoder()],
       ["feeVault", getAddressEncoder()],
+      ["treasury", getAddressEncoder()],
       ["holdThreshold", getU64Encoder()],
       ["holdSecs", getI64Encoder()],
       ["resultWindowSecs", getI64Encoder()],
@@ -122,6 +127,7 @@ export function getGlobalConfigDecoder(): FixedSizeDecoder<GlobalConfig> {
     ["disputeAuthority", getAddressDecoder()],
     ["usdcMint", getAddressDecoder()],
     ["feeVault", getAddressDecoder()],
+    ["treasury", getAddressDecoder()],
     ["holdThreshold", getU64Decoder()],
     ["holdSecs", getI64Decoder()],
     ["resultWindowSecs", getI64Decoder()],
@@ -193,5 +199,5 @@ export async function fetchAllMaybeGlobalConfig(
 }
 
 export function getGlobalConfigSize(): number {
-  return 163;
+  return 195;
 }

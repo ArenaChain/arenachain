@@ -110,12 +110,14 @@ export type AdminInitializeConfigInstructionData = {
   discriminator: ReadonlyUint8Array;
   admin: Address;
   disputeAuthority: Address;
+  treasury: Address;
   params: ConfigParams;
 };
 
 export type AdminInitializeConfigInstructionDataArgs = {
   admin: Address;
   disputeAuthority: Address;
+  treasury: Address;
   params: ConfigParamsArgs;
 };
 
@@ -125,6 +127,7 @@ export function getAdminInitializeConfigInstructionDataEncoder(): FixedSizeEncod
       ["discriminator", fixEncoderSize(getBytesEncoder(), 8)],
       ["admin", getAddressEncoder()],
       ["disputeAuthority", getAddressEncoder()],
+      ["treasury", getAddressEncoder()],
       ["params", getConfigParamsEncoder()],
     ]),
     (value) => ({
@@ -139,6 +142,7 @@ export function getAdminInitializeConfigInstructionDataDecoder(): FixedSizeDecod
     ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
     ["admin", getAddressDecoder()],
     ["disputeAuthority", getAddressDecoder()],
+    ["treasury", getAddressDecoder()],
     ["params", getConfigParamsDecoder()],
   ]);
 }
@@ -175,6 +179,7 @@ export type AdminInitializeConfigAsyncInput<
   systemProgram?: TAccountSystemProgram;
   admin: AdminInitializeConfigInstructionDataArgs["admin"];
   disputeAuthority: AdminInitializeConfigInstructionDataArgs["disputeAuthority"];
+  treasury: AdminInitializeConfigInstructionDataArgs["treasury"];
   params: AdminInitializeConfigInstructionDataArgs["params"];
 };
 
@@ -384,6 +389,7 @@ export type AdminInitializeConfigInput<
   systemProgram?: TAccountSystemProgram;
   admin: AdminInitializeConfigInstructionDataArgs["admin"];
   disputeAuthority: AdminInitializeConfigInstructionDataArgs["disputeAuthority"];
+  treasury: AdminInitializeConfigInstructionDataArgs["treasury"];
   params: AdminInitializeConfigInstructionDataArgs["params"];
 };
 

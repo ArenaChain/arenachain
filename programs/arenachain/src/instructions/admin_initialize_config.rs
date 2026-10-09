@@ -45,14 +45,17 @@ pub fn handle_admin_initialize_config(
     ctx: Context<AdminInitializeConfig>,
     admin: Pubkey,
     dispute_authority: Pubkey,
+    treasury: Pubkey,
     params: ConfigParams,
 ) -> Result<()> {
     params.validate()?;
+    require_keys_neq!(treasury, Pubkey::default(), ArenaError::InvalidConfigParam);
     let config = &mut ctx.accounts.config;
     config.admin = admin;
     config.dispute_authority = dispute_authority;
     config.usdc_mint = ctx.accounts.usdc_mint.key();
     config.fee_vault = ctx.accounts.fee_vault.key();
+    config.treasury = treasury;
     config.apply(&params);
     config.paused = false;
     config.bump = ctx.bumps.config;

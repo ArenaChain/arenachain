@@ -6,9 +6,12 @@
  * @see https://github.com/codama-idl/codama
  */
 
+export * from "./feesWithdrawn";
 export * from "./matchCancelled";
 export * from "./matchCreated";
+export * from "./matchExpired";
 export * from "./matchJoined";
 export * from "./matchStarted";
 export * from "./payoutMade";
+export * from "./ratingsUpdated";
 export * from "./resultSubmitted";

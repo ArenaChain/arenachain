@@ -20,6 +20,18 @@ pub const BPS_DENOMINATOR: u64 = 10_000;
 
 #[constant]
 pub const STARTING_ELO: u32 = 1000;
+#[constant]
+pub const MIN_ELO: u32 = 100;
+pub const ELO_K: i64 = 32;
+
+#[constant]
+pub const MAX_REPUTATION: i32 = 100;
+pub const FORFEIT_REPUTATION_PENALTY: i32 = 10;
+pub const COMPLETED_MATCH_REPUTATION: i32 = 1;
+
+pub const FORFEIT_WINDOW_SECS: i64 = 30 * 24 * 3600;
+pub const SECOND_FORFEIT_BAN_SECS: i64 = 24 * 3600;
+pub const THIRD_FORFEIT_BAN_SECS: i64 = 7 * 24 * 3600;
 
 /// Domain tag that prefixes every server-signed result message.
 pub const RESULT_DOMAIN: &[u8; 20] = b"ARENACHAIN_RESULT_V1";

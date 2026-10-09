@@ -5,9 +5,10 @@ use crate::{
     constants::*,
     ed25519::{build_result_message, verify_preceding_ed25519},
     errors::ArenaError,
-    events::{PayoutMade, ResultSubmitted},
+    events::{PayoutMade, RatingsUpdated, ResultSubmitted},
     payout::{split_pool, Escrow},
-    state::{GameServer, GlobalConfig, Match, MatchStatus, ResultKind},
+    rating::apply_result,
+    state::{GameServer, GlobalConfig, Match, MatchStatus, PlayerProfile, ResultKind},
 };
 
 /// Settles a live match with a result signed by its game server. Anyone can relay it;
@@ -56,6 +57,18 @@ pub struct SubmitResult<'info> {
         token::token_program = token_program,
     )]
     pub player_b_token: Box<Account<'info, TokenAccount>>,
+    #[account(
+        mut,
+        seeds = [PROFILE_SEED, arena_match.player_a.as_ref()],
+        bump = player_a_profile.bump,
+    )]
+    pub player_a_profile: Box<Account<'info, PlayerProfile>>,
+    #[account(
+        mut,
+        seeds = [PROFILE_SEED, arena_match.player_b.as_ref()],
+        bump = player_b_profile.bump,
+    )]
+    pub player_b_profile: Box<Account<'info, PlayerProfile>>,
     #[account(mut)]
     pub fee_vault: Box<Account<'info, TokenAccount>>,
     /// Receives the vault's rent when it closes.
@@ -121,6 +134,32 @@ pub fn handle_submit_result(
     m.demo_hash = demo_hash;
     m.unlock_at = unlock_at;
     m.paid_out = !hold;
+
+    // Ratings, record, reputation and forfeit penalties apply once, at settlement.
+    if kind != ResultKind::Void {
+        let a_won = winner == m.player_a;
+        let (winner_profile, loser_profile) = if a_won {
+            (
+                &mut ctx.accounts.player_a_profile,
+                &mut ctx.accounts.player_b_profile,
+            )
+        } else {
+            (
+                &mut ctx.accounts.player_b_profile,
+                &mut ctx.accounts.player_a_profile,
+            )
+        };
+        apply_result(winner_profile, loser_profile, kind, now);
+        emit!(RatingsUpdated {
+            arena_match: ctx.accounts.arena_match.key(),
+            winner: winner_profile.authority,
+            winner_elo: winner_profile.elo,
+            loser: loser_profile.authority,
+            loser_elo: loser_profile.elo,
+            loser_banned_until: loser_profile.banned_until,
+        });
+    }
+    let m = &ctx.accounts.arena_match;
 
     emit!(ResultSubmitted {
         arena_match: m.key(),

@@ -32,3 +32,17 @@ pub fn handle_admin_set_paused(ctx: Context<AdminUpdateConfig>, paused: bool) ->
     ctx.accounts.config.paused = paused;
     Ok(())
 }
+
+/// Points fee withdrawals at a new treasury wallet (e.g. a rotated multisig).
+pub fn handle_admin_set_treasury(
+    ctx: Context<AdminUpdateConfig>,
+    new_treasury: Pubkey,
+) -> Result<()> {
+    require_keys_neq!(
+        new_treasury,
+        Pubkey::default(),
+        ArenaError::InvalidConfigParam
+    );
+    ctx.accounts.config.treasury = new_treasury;
+    Ok(())
+}

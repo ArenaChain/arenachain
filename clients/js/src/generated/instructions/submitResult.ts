@@ -67,6 +67,8 @@ export type SubmitResultInstruction<
   TAccountVault extends string | AccountMeta<string> = string,
   TAccountPlayerAToken extends string | AccountMeta<string> = string,
   TAccountPlayerBToken extends string | AccountMeta<string> = string,
+  TAccountPlayerAProfile extends string | AccountMeta<string> = string,
+  TAccountPlayerBProfile extends string | AccountMeta<string> = string,
   TAccountFeeVault extends string | AccountMeta<string> = string,
   TAccountPlayerA extends string | AccountMeta<string> = string,
   TAccountInstructionsSysvar extends string | AccountMeta<string> =
@@ -99,6 +101,12 @@ export type SubmitResultInstruction<
       TAccountPlayerBToken extends string
         ? WritableAccount<TAccountPlayerBToken>
         : TAccountPlayerBToken,
+      TAccountPlayerAProfile extends string
+        ? WritableAccount<TAccountPlayerAProfile>
+        : TAccountPlayerAProfile,
+      TAccountPlayerBProfile extends string
+        ? WritableAccount<TAccountPlayerBProfile>
+        : TAccountPlayerBProfile,
       TAccountFeeVault extends string
         ? WritableAccount<TAccountFeeVault>
         : TAccountFeeVault,
@@ -169,6 +177,10 @@ export type SubmitResultAsyncInput<
     InstructionAccountInput,
   TAccountPlayerBToken extends InstructionAccountInput =
     InstructionAccountInput,
+  TAccountPlayerAProfile extends InstructionAccountInput =
+    InstructionAccountInput,
+  TAccountPlayerBProfile extends InstructionAccountInput =
+    InstructionAccountInput,
   TAccountFeeVault extends InstructionAccountInput = InstructionAccountInput,
   TAccountPlayerA extends InstructionAccountInput = InstructionAccountInput,
   TAccountInstructionsSysvar extends InstructionAccountInput =
@@ -183,6 +195,8 @@ export type SubmitResultAsyncInput<
   vault?: TAccountVault;
   playerAToken: TAccountPlayerAToken;
   playerBToken: TAccountPlayerBToken;
+  playerAProfile: TAccountPlayerAProfile;
+  playerBProfile: TAccountPlayerBProfile;
   feeVault: TAccountFeeVault;
   /** Receives the vault's rent when it closes. */
   playerA: TAccountPlayerA;
@@ -201,6 +215,8 @@ export async function getSubmitResultInstructionAsync<
   TAccountVault extends InstructionAccountInput,
   TAccountPlayerAToken extends InstructionAccountInput,
   TAccountPlayerBToken extends InstructionAccountInput,
+  TAccountPlayerAProfile extends InstructionAccountInput,
+  TAccountPlayerBProfile extends InstructionAccountInput,
   TAccountFeeVault extends InstructionAccountInput,
   TAccountPlayerA extends InstructionAccountInput,
   TAccountInstructionsSysvar extends InstructionAccountInput,
@@ -215,6 +231,8 @@ export async function getSubmitResultInstructionAsync<
     TAccountVault,
     TAccountPlayerAToken,
     TAccountPlayerBToken,
+    TAccountPlayerAProfile,
+    TAccountPlayerBProfile,
     TAccountFeeVault,
     TAccountPlayerA,
     TAccountInstructionsSysvar,
@@ -251,6 +269,14 @@ export async function getSubmitResultInstructionAsync<
     ResolvedInstructionAccountMeta<
       TAccountPlayerBToken,
       InstructionAccountInputAddress<TAccountPlayerBToken>
+    >,
+    ResolvedInstructionAccountMeta<
+      TAccountPlayerAProfile,
+      InstructionAccountInputAddress<TAccountPlayerAProfile>
+    >,
+    ResolvedInstructionAccountMeta<
+      TAccountPlayerBProfile,
+      InstructionAccountInputAddress<TAccountPlayerBProfile>
     >,
     ResolvedInstructionAccountMeta<
       TAccountFeeVault,
@@ -298,6 +324,16 @@ export async function getSubmitResultInstructionAsync<
     },
     playerBToken: {
       value: input.playerBToken ?? null,
+      isSigner: false,
+      isWritable: true,
+    },
+    playerAProfile: {
+      value: input.playerAProfile ?? null,
+      isSigner: false,
+      isWritable: true,
+    },
+    playerBProfile: {
+      value: input.playerBProfile ?? null,
       isSigner: false,
       isWritable: true,
     },
@@ -363,6 +399,8 @@ export async function getSubmitResultInstructionAsync<
       getAccountMeta("vault", accounts.vault),
       getAccountMeta("playerAToken", accounts.playerAToken),
       getAccountMeta("playerBToken", accounts.playerBToken),
+      getAccountMeta("playerAProfile", accounts.playerAProfile),
+      getAccountMeta("playerBProfile", accounts.playerBProfile),
       getAccountMeta("feeVault", accounts.feeVault),
       getAccountMeta("playerA", accounts.playerA),
       getAccountMeta("instructionsSysvar", accounts.instructionsSysvar),
@@ -403,6 +441,14 @@ export async function getSubmitResultInstructionAsync<
       InstructionAccountInputAddress<TAccountPlayerBToken>
     >,
     ResolvedInstructionAccountMeta<
+      TAccountPlayerAProfile,
+      InstructionAccountInputAddress<TAccountPlayerAProfile>
+    >,
+    ResolvedInstructionAccountMeta<
+      TAccountPlayerBProfile,
+      InstructionAccountInputAddress<TAccountPlayerBProfile>
+    >,
+    ResolvedInstructionAccountMeta<
       TAccountFeeVault,
       InstructionAccountInputAddress<TAccountFeeVault>
     >,
@@ -431,6 +477,10 @@ export type SubmitResultInput<
     InstructionAccountInput,
   TAccountPlayerBToken extends InstructionAccountInput =
     InstructionAccountInput,
+  TAccountPlayerAProfile extends InstructionAccountInput =
+    InstructionAccountInput,
+  TAccountPlayerBProfile extends InstructionAccountInput =
+    InstructionAccountInput,
   TAccountFeeVault extends InstructionAccountInput = InstructionAccountInput,
   TAccountPlayerA extends InstructionAccountInput = InstructionAccountInput,
   TAccountInstructionsSysvar extends InstructionAccountInput =
@@ -445,6 +495,8 @@ export type SubmitResultInput<
   vault: TAccountVault;
   playerAToken: TAccountPlayerAToken;
   playerBToken: TAccountPlayerBToken;
+  playerAProfile: TAccountPlayerAProfile;
+  playerBProfile: TAccountPlayerBProfile;
   feeVault: TAccountFeeVault;
   /** Receives the vault's rent when it closes. */
   playerA: TAccountPlayerA;
@@ -463,6 +515,8 @@ export function getSubmitResultInstruction<
   TAccountVault extends InstructionAccountInput,
   TAccountPlayerAToken extends InstructionAccountInput,
   TAccountPlayerBToken extends InstructionAccountInput,
+  TAccountPlayerAProfile extends InstructionAccountInput,
+  TAccountPlayerBProfile extends InstructionAccountInput,
   TAccountFeeVault extends InstructionAccountInput,
   TAccountPlayerA extends InstructionAccountInput,
   TAccountInstructionsSysvar extends InstructionAccountInput,
@@ -477,6 +531,8 @@ export function getSubmitResultInstruction<
     TAccountVault,
     TAccountPlayerAToken,
     TAccountPlayerBToken,
+    TAccountPlayerAProfile,
+    TAccountPlayerBProfile,
     TAccountFeeVault,
     TAccountPlayerA,
     TAccountInstructionsSysvar,
@@ -512,6 +568,14 @@ export function getSubmitResultInstruction<
   ResolvedInstructionAccountMeta<
     TAccountPlayerBToken,
     InstructionAccountInputAddress<TAccountPlayerBToken>
+  >,
+  ResolvedInstructionAccountMeta<
+    TAccountPlayerAProfile,
+    InstructionAccountInputAddress<TAccountPlayerAProfile>
+  >,
+  ResolvedInstructionAccountMeta<
+    TAccountPlayerBProfile,
+    InstructionAccountInputAddress<TAccountPlayerBProfile>
   >,
   ResolvedInstructionAccountMeta<
     TAccountFeeVault,
@@ -558,6 +622,16 @@ export function getSubmitResultInstruction<
     },
     playerBToken: {
       value: input.playerBToken ?? null,
+      isSigner: false,
+      isWritable: true,
+    },
+    playerAProfile: {
+      value: input.playerAProfile ?? null,
+      isSigner: false,
+      isWritable: true,
+    },
+    playerBProfile: {
+      value: input.playerBProfile ?? null,
       isSigner: false,
       isWritable: true,
     },
@@ -609,6 +683,8 @@ export function getSubmitResultInstruction<
       getAccountMeta("vault", accounts.vault),
       getAccountMeta("playerAToken", accounts.playerAToken),
       getAccountMeta("playerBToken", accounts.playerBToken),
+      getAccountMeta("playerAProfile", accounts.playerAProfile),
+      getAccountMeta("playerBProfile", accounts.playerBProfile),
       getAccountMeta("feeVault", accounts.feeVault),
       getAccountMeta("playerA", accounts.playerA),
       getAccountMeta("instructionsSysvar", accounts.instructionsSysvar),
@@ -649,6 +725,14 @@ export function getSubmitResultInstruction<
       InstructionAccountInputAddress<TAccountPlayerBToken>
     >,
     ResolvedInstructionAccountMeta<
+      TAccountPlayerAProfile,
+      InstructionAccountInputAddress<TAccountPlayerAProfile>
+    >,
+    ResolvedInstructionAccountMeta<
+      TAccountPlayerBProfile,
+      InstructionAccountInputAddress<TAccountPlayerBProfile>
+    >,
+    ResolvedInstructionAccountMeta<
       TAccountFeeVault,
       InstructionAccountInputAddress<TAccountFeeVault>
     >,
@@ -680,11 +764,13 @@ export type ParsedSubmitResultInstruction<
     vault: TAccountMetas[4];
     playerAToken: TAccountMetas[5];
     playerBToken: TAccountMetas[6];
-    feeVault: TAccountMetas[7];
+    playerAProfile: TAccountMetas[7];
+    playerBProfile: TAccountMetas[8];
+    feeVault: TAccountMetas[9];
     /** Receives the vault's rent when it closes. */
-    playerA: TAccountMetas[8];
-    instructionsSysvar: TAccountMetas[9];
-    tokenProgram: TAccountMetas[10];
+    playerA: TAccountMetas[10];
+    instructionsSysvar: TAccountMetas[11];
+    tokenProgram: TAccountMetas[12];
   };
   data: SubmitResultInstructionData;
 };
@@ -697,12 +783,12 @@ export function parseSubmitResultInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedSubmitResultInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 11) {
+  if (instruction.accounts.length < 13) {
     throw new SolanaError(
       SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
       {
         actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 11,
+        expectedAccountMetas: 13,
       },
     );
   }
@@ -722,6 +808,8 @@ export function parseSubmitResultInstruction<
       vault: getNextAccount(),
       playerAToken: getNextAccount(),
       playerBToken: getNextAccount(),
+      playerAProfile: getNextAccount(),
+      playerBProfile: getNextAccount(),
       feeVault: getNextAccount(),
       playerA: getNextAccount(),
       instructionsSysvar: getNextAccount(),

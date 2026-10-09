@@ -50,16 +50,22 @@ export const ARENACHAIN_ERROR__RESULT_MESSAGE_MISMATCH = 0x177f; // 6015
 export const ARENACHAIN_ERROR__ALREADY_PAID = 0x1780; // 6016
 /** PayoutLocked: Payout is still on hold */
 export const ARENACHAIN_ERROR__PAYOUT_LOCKED = 0x1781; // 6017
+/** NotExpired: Result deadline has not passed yet */
+export const ARENACHAIN_ERROR__NOT_EXPIRED = 0x1782; // 6018
+/** InvalidAmount: Invalid withdrawal amount */
+export const ARENACHAIN_ERROR__INVALID_AMOUNT = 0x1783; // 6019
 
 export type ArenachainError =
   | typeof ARENACHAIN_ERROR__ALREADY_PAID
   | typeof ARENACHAIN_ERROR__CANNOT_JOIN_OWN_MATCH
+  | typeof ARENACHAIN_ERROR__INVALID_AMOUNT
   | typeof ARENACHAIN_ERROR__INVALID_CONFIG_PARAM
   | typeof ARENACHAIN_ERROR__INVALID_MATCH_STATUS
   | typeof ARENACHAIN_ERROR__INVALID_WINNER
   | typeof ARENACHAIN_ERROR__MALFORMED_ED25519_INSTRUCTION
   | typeof ARENACHAIN_ERROR__MATH_OVERFLOW
   | typeof ARENACHAIN_ERROR__MISSING_ED25519_INSTRUCTION
+  | typeof ARENACHAIN_ERROR__NOT_EXPIRED
   | typeof ARENACHAIN_ERROR__PAUSED
   | typeof ARENACHAIN_ERROR__PAYOUT_LOCKED
   | typeof ARENACHAIN_ERROR__PLAYER_BANNED
@@ -76,12 +82,14 @@ if (process.env["NODE_ENV"] !== "production") {
   arenachainErrorMessages = {
     [ARENACHAIN_ERROR__ALREADY_PAID]: `Payout already made`,
     [ARENACHAIN_ERROR__CANNOT_JOIN_OWN_MATCH]: `A player cannot join their own match`,
+    [ARENACHAIN_ERROR__INVALID_AMOUNT]: `Invalid withdrawal amount`,
     [ARENACHAIN_ERROR__INVALID_CONFIG_PARAM]: `Invalid config parameter`,
     [ARENACHAIN_ERROR__INVALID_MATCH_STATUS]: `Match is not in the required status`,
     [ARENACHAIN_ERROR__INVALID_WINNER]: `Winner must be one of the match's players`,
     [ARENACHAIN_ERROR__MALFORMED_ED25519_INSTRUCTION]: `Malformed Ed25519 instruction`,
     [ARENACHAIN_ERROR__MATH_OVERFLOW]: `Arithmetic overflow`,
     [ARENACHAIN_ERROR__MISSING_ED25519_INSTRUCTION]: `Expected an Ed25519 instruction immediately before this one`,
+    [ARENACHAIN_ERROR__NOT_EXPIRED]: `Result deadline has not passed yet`,
     [ARENACHAIN_ERROR__PAUSED]: `Program is paused`,
     [ARENACHAIN_ERROR__PAYOUT_LOCKED]: `Payout is still on hold`,
     [ARENACHAIN_ERROR__PLAYER_BANNED]: `Player is banned from paid matches`,

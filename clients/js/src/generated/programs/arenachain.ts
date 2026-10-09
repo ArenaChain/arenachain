@@ -52,48 +52,60 @@ import {
   getAdminRegisterServerInstructionAsync,
   getAdminSetPausedInstructionAsync,
   getAdminSetServerActiveInstructionAsync,
+  getAdminSetTreasuryInstructionAsync,
   getAdminUpdateConfigInstructionAsync,
+  getAdminWithdrawFeesInstructionAsync,
   getClaimPayoutInstructionAsync,
   getPlayerCancelMatchInstructionAsync,
   getPlayerCreateMatchInstructionAsync,
   getPlayerCreateProfileInstructionAsync,
   getPlayerJoinMatchInstructionAsync,
+  getRefundExpiredInstructionAsync,
   getServerStartMatchInstructionAsync,
   getSubmitResultInstructionAsync,
   parseAdminInitializeConfigInstruction,
   parseAdminRegisterServerInstruction,
   parseAdminSetPausedInstruction,
   parseAdminSetServerActiveInstruction,
+  parseAdminSetTreasuryInstruction,
   parseAdminUpdateConfigInstruction,
+  parseAdminWithdrawFeesInstruction,
   parseClaimPayoutInstruction,
   parsePlayerCancelMatchInstruction,
   parsePlayerCreateMatchInstruction,
   parsePlayerCreateProfileInstruction,
   parsePlayerJoinMatchInstruction,
+  parseRefundExpiredInstruction,
   parseServerStartMatchInstruction,
   parseSubmitResultInstruction,
   type AdminInitializeConfigAsyncInput,
   type AdminRegisterServerAsyncInput,
   type AdminSetPausedAsyncInput,
   type AdminSetServerActiveAsyncInput,
+  type AdminSetTreasuryAsyncInput,
   type AdminUpdateConfigAsyncInput,
+  type AdminWithdrawFeesAsyncInput,
   type ClaimPayoutAsyncInput,
   type ParsedAdminInitializeConfigInstruction,
   type ParsedAdminRegisterServerInstruction,
   type ParsedAdminSetPausedInstruction,
   type ParsedAdminSetServerActiveInstruction,
+  type ParsedAdminSetTreasuryInstruction,
   type ParsedAdminUpdateConfigInstruction,
+  type ParsedAdminWithdrawFeesInstruction,
   type ParsedClaimPayoutInstruction,
   type ParsedPlayerCancelMatchInstruction,
   type ParsedPlayerCreateMatchInstruction,
   type ParsedPlayerCreateProfileInstruction,
   type ParsedPlayerJoinMatchInstruction,
+  type ParsedRefundExpiredInstruction,
   type ParsedServerStartMatchInstruction,
   type ParsedSubmitResultInstruction,
   type PlayerCancelMatchAsyncInput,
   type PlayerCreateMatchAsyncInput,
   type PlayerCreateProfileAsyncInput,
   type PlayerJoinMatchAsyncInput,
+  type RefundExpiredAsyncInput,
   type ServerStartMatchAsyncInput,
   type SubmitResultAsyncInput,
 } from "../instructions";
@@ -174,11 +186,14 @@ export function identifyArenachainAccount(
 }
 
 export enum ArenachainEvent {
+  FeesWithdrawn,
   MatchCancelled,
   MatchCreated,
+  MatchExpired,
   MatchJoined,
   MatchStarted,
   PayoutMade,
+  RatingsUpdated,
   ResultSubmitted,
 }
 
@@ -186,6 +201,17 @@ export function identifyArenachainEvent(
   event: { data: ReadonlyUint8Array } | ReadonlyUint8Array,
 ): ArenachainEvent {
   const data = "data" in event ? event.data : event;
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([234, 15, 0, 119, 148, 241, 40, 21]),
+      ),
+      0,
+    )
+  ) {
+    return ArenachainEvent.FeesWithdrawn;
+  }
   if (
     containsBytes(
       data,
@@ -207,6 +233,17 @@ export function identifyArenachainEvent(
     )
   ) {
     return ArenachainEvent.MatchCreated;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([39, 60, 224, 231, 10, 30, 50, 250]),
+      ),
+      0,
+    )
+  ) {
+    return ArenachainEvent.MatchExpired;
   }
   if (
     containsBytes(
@@ -245,6 +282,17 @@ export function identifyArenachainEvent(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([95, 38, 5, 218, 200, 239, 227, 117]),
+      ),
+      0,
+    )
+  ) {
+    return ArenachainEvent.RatingsUpdated;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([156, 153, 163, 89, 245, 144, 63, 94]),
       ),
       0,
@@ -262,12 +310,15 @@ export enum ArenachainInstruction {
   AdminRegisterServer,
   AdminSetPaused,
   AdminSetServerActive,
+  AdminSetTreasury,
   AdminUpdateConfig,
+  AdminWithdrawFees,
   ClaimPayout,
   PlayerCancelMatch,
   PlayerCreateMatch,
   PlayerCreateProfile,
   PlayerJoinMatch,
+  RefundExpired,
   ServerStartMatch,
   SubmitResult,
 }
@@ -324,12 +375,34 @@ export function identifyArenachainInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([174, 251, 239, 65, 241, 162, 136, 187]),
+      ),
+      0,
+    )
+  ) {
+    return ArenachainInstruction.AdminSetTreasury;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([224, 243, 100, 135, 120, 165, 43, 244]),
       ),
       0,
     )
   ) {
     return ArenachainInstruction.AdminUpdateConfig;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([236, 186, 208, 151, 204, 142, 168, 30]),
+      ),
+      0,
+    )
+  ) {
+    return ArenachainInstruction.AdminWithdrawFees;
   }
   if (
     containsBytes(
@@ -390,6 +463,17 @@ export function identifyArenachainInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([118, 153, 164, 244, 40, 128, 242, 250]),
+      ),
+      0,
+    )
+  ) {
+    return ArenachainInstruction.RefundExpired;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([102, 162, 71, 151, 1, 60, 107, 115]),
       ),
       0,
@@ -430,8 +514,14 @@ export type ParsedArenachainInstruction<
       instructionType: ArenachainInstruction.AdminSetServerActive;
     } & ParsedAdminSetServerActiveInstruction<TProgram>)
   | ({
+      instructionType: ArenachainInstruction.AdminSetTreasury;
+    } & ParsedAdminSetTreasuryInstruction<TProgram>)
+  | ({
       instructionType: ArenachainInstruction.AdminUpdateConfig;
     } & ParsedAdminUpdateConfigInstruction<TProgram>)
+  | ({
+      instructionType: ArenachainInstruction.AdminWithdrawFees;
+    } & ParsedAdminWithdrawFeesInstruction<TProgram>)
   | ({
       instructionType: ArenachainInstruction.ClaimPayout;
     } & ParsedClaimPayoutInstruction<TProgram>)
@@ -447,6 +537,9 @@ export type ParsedArenachainInstruction<
   | ({
       instructionType: ArenachainInstruction.PlayerJoinMatch;
     } & ParsedPlayerJoinMatchInstruction<TProgram>)
+  | ({
+      instructionType: ArenachainInstruction.RefundExpired;
+    } & ParsedRefundExpiredInstruction<TProgram>)
   | ({
       instructionType: ArenachainInstruction.ServerStartMatch;
     } & ParsedServerStartMatchInstruction<TProgram>)
@@ -487,11 +580,25 @@ export function parseArenachainInstruction<TProgram extends string>(
         ...parseAdminSetServerActiveInstruction(instruction),
       };
     }
+    case ArenachainInstruction.AdminSetTreasury: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: ArenachainInstruction.AdminSetTreasury,
+        ...parseAdminSetTreasuryInstruction(instruction),
+      };
+    }
     case ArenachainInstruction.AdminUpdateConfig: {
       assertIsInstructionWithAccounts(instruction);
       return {
         instructionType: ArenachainInstruction.AdminUpdateConfig,
         ...parseAdminUpdateConfigInstruction(instruction),
+      };
+    }
+    case ArenachainInstruction.AdminWithdrawFees: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: ArenachainInstruction.AdminWithdrawFees,
+        ...parseAdminWithdrawFeesInstruction(instruction),
       };
     }
     case ArenachainInstruction.ClaimPayout: {
@@ -527,6 +634,13 @@ export function parseArenachainInstruction<TProgram extends string>(
       return {
         instructionType: ArenachainInstruction.PlayerJoinMatch,
         ...parsePlayerJoinMatchInstruction(instruction),
+      };
+    }
+    case ArenachainInstruction.RefundExpired: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: ArenachainInstruction.RefundExpired,
+        ...parseRefundExpiredInstruction(instruction),
       };
     }
     case ArenachainInstruction.ServerStartMatch: {
@@ -591,9 +705,17 @@ export type ArenachainPluginInstructions = {
     input: AdminSetServerActiveAsyncInput,
   ) => ReturnType<typeof getAdminSetServerActiveInstructionAsync> &
     SelfPlanAndSendFunctions;
+  adminSetTreasury: (
+    input: AdminSetTreasuryAsyncInput,
+  ) => ReturnType<typeof getAdminSetTreasuryInstructionAsync> &
+    SelfPlanAndSendFunctions;
   adminUpdateConfig: (
     input: AdminUpdateConfigAsyncInput,
   ) => ReturnType<typeof getAdminUpdateConfigInstructionAsync> &
+    SelfPlanAndSendFunctions;
+  adminWithdrawFees: (
+    input: AdminWithdrawFeesAsyncInput,
+  ) => ReturnType<typeof getAdminWithdrawFeesInstructionAsync> &
     SelfPlanAndSendFunctions;
   claimPayout: (
     input: ClaimPayoutAsyncInput,
@@ -614,6 +736,10 @@ export type ArenachainPluginInstructions = {
   playerJoinMatch: (
     input: PlayerJoinMatchAsyncInput,
   ) => ReturnType<typeof getPlayerJoinMatchInstructionAsync> &
+    SelfPlanAndSendFunctions;
+  refundExpired: (
+    input: RefundExpiredAsyncInput,
+  ) => ReturnType<typeof getRefundExpiredInstructionAsync> &
     SelfPlanAndSendFunctions;
   serverStartMatch: (
     input: ServerStartMatchAsyncInput,
@@ -676,10 +802,20 @@ export function arenachainProgram() {
               client,
               getAdminSetServerActiveInstructionAsync(input),
             ),
+          adminSetTreasury: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getAdminSetTreasuryInstructionAsync(input),
+            ),
           adminUpdateConfig: (input) =>
             addSelfPlanAndSendFunctions(
               client,
               getAdminUpdateConfigInstructionAsync(input),
+            ),
+          adminWithdrawFees: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getAdminWithdrawFeesInstructionAsync(input),
             ),
           claimPayout: (input) =>
             addSelfPlanAndSendFunctions(
@@ -705,6 +841,11 @@ export function arenachainProgram() {
             addSelfPlanAndSendFunctions(
               client,
               getPlayerJoinMatchInstructionAsync(input),
+            ),
+          refundExpired: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getRefundExpiredInstructionAsync(input),
             ),
           serverStartMatch: (input) =>
             addSelfPlanAndSendFunctions(

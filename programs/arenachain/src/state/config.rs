@@ -11,6 +11,8 @@ pub struct GlobalConfig {
     pub usdc_mint: Pubkey,
     /// Fee vault token account, PDA `["fee_vault"]`, owned by this config.
     pub fee_vault: Pubkey,
+    /// Wallet whose USDC token account receives withdrawn fees.
+    pub treasury: Pubkey,
     /// Pools at or above this amount wait `hold_secs` before payout.
     pub hold_threshold: u64,
     pub hold_secs: i64,

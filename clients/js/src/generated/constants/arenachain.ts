@@ -22,6 +22,10 @@ export const MATCH_SEED: ReadonlyUint8Array = new Uint8Array([
   109, 97, 116, 99, 104,
 ]);
 
+export const MAX_REPUTATION: number = 100;
+
+export const MIN_ELO: number = 100;
+
 export const PROFILE_SEED: ReadonlyUint8Array = new Uint8Array([
   112, 114, 111, 102, 105, 108, 101,
 ]);

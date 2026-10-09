@@ -45,3 +45,25 @@ pub struct PayoutMade {
     pub payout: u64,
     pub fee: u64,
 }
+
+#[event]
+pub struct MatchExpired {
+    pub arena_match: Pubkey,
+}
+
+#[event]
+pub struct RatingsUpdated {
+    pub arena_match: Pubkey,
+    pub winner: Pubkey,
+    pub winner_elo: u32,
+    pub loser: Pubkey,
+    pub loser_elo: u32,
+    /// Ban end set on the loser by a forfeit penalty (0 if none).
+    pub loser_banned_until: i64,
+}
+
+#[event]
+pub struct FeesWithdrawn {
+    pub treasury: Pubkey,
+    pub amount: u64,
+}

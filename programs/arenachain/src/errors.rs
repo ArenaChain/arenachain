@@ -38,4 +38,8 @@ pub enum ArenaError {
     AlreadyPaid,
     #[msg("Payout is still on hold")]
     PayoutLocked,
+    #[msg("Result deadline has not passed yet")]
+    NotExpired,
+    #[msg("Invalid withdrawal amount")]
+    InvalidAmount,
 }

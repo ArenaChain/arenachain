@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 /// Player profile. PDA `["profile", authority]`.
-/// Rating, record and penalty fields are written by later steps (settlement, forfeits, Steam link).
+/// Rating, record, reputation and penalties are updated at settlement (`rating.rs`).
 #[account]
 #[derive(InitSpace)]
 pub struct PlayerProfile {
@@ -9,8 +9,11 @@ pub struct PlayerProfile {
     pub elo: u32,
     pub wins: u32,
     pub losses: u32,
-    pub forfeits_30d: u8,
-    pub last_forfeit_at: i64,
+    pub total_forfeits: u32,
+    /// The two most recent forfeit times, newest first (0 = none). Enough to count forfeits
+    /// in the last 30 days exactly for the three-step penalty ladder.
+    pub recent_forfeits: [i64; 2],
+    /// 0..=100, starts at 100.
     pub reputation: i32,
     pub banned_until: i64,
     /// SteamID64; 0 means unlinked.

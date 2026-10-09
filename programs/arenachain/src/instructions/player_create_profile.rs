@@ -23,9 +23,9 @@ pub fn handle_player_create_profile(ctx: Context<PlayerCreateProfile>) -> Result
     profile.elo = STARTING_ELO;
     profile.wins = 0;
     profile.losses = 0;
-    profile.forfeits_30d = 0;
-    profile.last_forfeit_at = 0;
-    profile.reputation = 0;
+    profile.total_forfeits = 0;
+    profile.recent_forfeits = [0; 2];
+    profile.reputation = MAX_REPUTATION;
     profile.banned_until = 0;
     profile.steam_id = 0;
     profile.created_at = Clock::get()?.unix_timestamp;
