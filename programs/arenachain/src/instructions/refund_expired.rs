@@ -56,10 +56,12 @@ pub struct RefundExpired<'info> {
 
 pub fn handle_refund_expired(ctx: Context<RefundExpired>) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
-    require!(
-        now > ctx.accounts.arena_match.result_deadline,
-        ArenaError::NotExpired
-    );
+    let deadline = ctx
+        .accounts
+        .arena_match
+        .expiry_deadline()
+        .ok_or(ArenaError::InvalidMatchStatus)?;
+    require!(now > deadline, ArenaError::NotExpired);
 
     ctx.accounts.arena_match.status = MatchStatus::Refunded;
     ctx.accounts.arena_match.paid_out = true;

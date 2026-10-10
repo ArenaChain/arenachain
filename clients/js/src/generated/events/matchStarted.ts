@@ -17,6 +17,8 @@ import {
   getConstantEncoder,
   getHiddenPrefixDecoder,
   getHiddenPrefixEncoder,
+  getI64Decoder,
+  getI64Encoder,
   getStructDecoder,
   getStructEncoder,
   type Address,
@@ -35,9 +37,17 @@ export function getMatchStartedEventDiscriminatorBytes(): ReadonlyUint8Array {
   );
 }
 
-export type MatchStartedEvent = { arenaMatch: Address; gameServer: Address };
+export type MatchStartedEvent = {
+  arenaMatch: Address;
+  gameServer: Address;
+  resultDeadline: bigint;
+};
 
-export type MatchStartedEventArgs = MatchStartedEvent;
+export type MatchStartedEventArgs = {
+  arenaMatch: Address;
+  gameServer: Address;
+  resultDeadline: number | bigint;
+};
 
 /** Gets the encoder for {@link MatchStartedEventArgs} event data. */
 export function getMatchStartedEventEncoder(): FixedSizeEncoder<MatchStartedEventArgs> {
@@ -45,6 +55,7 @@ export function getMatchStartedEventEncoder(): FixedSizeEncoder<MatchStartedEven
     getStructEncoder([
       ["arenaMatch", getAddressEncoder()],
       ["gameServer", getAddressEncoder()],
+      ["resultDeadline", getI64Encoder()],
     ]),
     [getConstantEncoder(MATCH_STARTED_EVENT_DISCRIMINATOR)],
   );
@@ -56,6 +67,7 @@ export function getMatchStartedEventDecoder(): FixedSizeDecoder<MatchStartedEven
     getStructDecoder([
       ["arenaMatch", getAddressDecoder()],
       ["gameServer", getAddressDecoder()],
+      ["resultDeadline", getI64Decoder()],
     ]),
     [getConstantDecoder(MATCH_STARTED_EVENT_DISCRIMINATOR)],
   );

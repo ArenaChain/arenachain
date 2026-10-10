@@ -78,6 +78,9 @@ export type Match = {
   createdAt: bigint;
   joinedAt: bigint;
   startedAt: bigint;
+  /** Set at join: the server must start the match by then (`joined_at + window`). */
+  startDeadline: bigint;
+  /** Set at start: the result must arrive by then (`started_at + window`). 0 until started. */
   resultDeadline: bigint;
   resultKind: Option<ResultKind>;
   /** `Pubkey::default()` until a Win/Forfeit result settles. */
@@ -103,6 +106,9 @@ export type MatchArgs = {
   createdAt: number | bigint;
   joinedAt: number | bigint;
   startedAt: number | bigint;
+  /** Set at join: the server must start the match by then (`joined_at + window`). */
+  startDeadline: number | bigint;
+  /** Set at start: the result must arrive by then (`started_at + window`). 0 until started. */
   resultDeadline: number | bigint;
   resultKind: OptionOrNullable<ResultKindArgs>;
   /** `Pubkey::default()` until a Win/Forfeit result settles. */
@@ -131,6 +137,7 @@ export function getMatchEncoder(): Encoder<MatchArgs> {
       ["createdAt", getI64Encoder()],
       ["joinedAt", getI64Encoder()],
       ["startedAt", getI64Encoder()],
+      ["startDeadline", getI64Encoder()],
       ["resultDeadline", getI64Encoder()],
       ["resultKind", getOptionEncoder(getResultKindEncoder())],
       ["winner", getAddressEncoder()],
@@ -159,6 +166,7 @@ export function getMatchDecoder(): Decoder<Match> {
     ["createdAt", getI64Decoder()],
     ["joinedAt", getI64Decoder()],
     ["startedAt", getI64Decoder()],
+    ["startDeadline", getI64Decoder()],
     ["resultDeadline", getI64Decoder()],
     ["resultKind", getOptionDecoder(getResultKindDecoder())],
     ["winner", getAddressDecoder()],

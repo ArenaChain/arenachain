@@ -53,13 +53,13 @@ pub fn handle_player_join_match(ctx: Context<PlayerJoinMatch>) -> Result<()> {
         ArenaError::PlayerBanned
     );
 
-    let result_deadline = now
+    let start_deadline = now
         .checked_add(ctx.accounts.config.result_window_secs)
         .ok_or(ArenaError::MathOverflow)?;
     let m = &mut ctx.accounts.arena_match;
     m.player_b = ctx.accounts.joiner.key();
     m.joined_at = now;
-    m.result_deadline = result_deadline;
+    m.start_deadline = start_deadline;
     m.status = MatchStatus::Full;
     let entry_fee = m.entry_fee;
 
@@ -80,7 +80,7 @@ pub fn handle_player_join_match(ctx: Context<PlayerJoinMatch>) -> Result<()> {
     emit!(MatchJoined {
         arena_match: ctx.accounts.arena_match.key(),
         player_b: ctx.accounts.joiner.key(),
-        result_deadline,
+        start_deadline,
     });
     Ok(())
 }

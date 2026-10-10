@@ -43,7 +43,7 @@ Follow the `solana-dev` skill (`.claude/skills/solana-dev`) for Solana patterns.
   - `Void`: server failure that can't be restored. Both players are refunded.
 - Fee: 500 bps. `fee = pool * 500 / 10_000`, rounded down; the winner gets `pool - fee`; nothing stays in the vault.
 - Payout hold: pools at or above `hold_threshold` record the winner and an unlock time. Payout happens through `claim` after the hold unless the dispute authority freezes it, because VAC bans arrive late.
-- Expiry: if nothing settles by the result deadline, anyone can trigger refunds to both players, so funds can never be trapped.
+- Expiry: once a match is full, the server must start it by the start deadline (`joined_at + result_window_secs`), and a started match must settle by the result deadline (`started_at + result_window_secs`). Past the relevant deadline with nothing settled, anyone can trigger refunds to both players, so funds can never be trapped.
 - Dual confirmation: if both players sign the same winner, settle without the server.
 - Escrow only ever goes to the match's players, plus the fee to the fee vault. No admin path withdraws escrow.
 - Forfeit penalties within 30 days: reputation hit, then a 24-hour ban from paid matches, then a 7-day ban.

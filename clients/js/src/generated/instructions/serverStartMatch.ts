@@ -40,7 +40,7 @@ import {
   type ResolvedInstructionAccount,
   type ResolvedInstructionAccountMeta,
 } from "@solana/program-client-core";
-import { findServerStartMatchGameServerPda } from "../pdas";
+import { findConfigPda, findServerStartMatchGameServerPda } from "../pdas";
 import { ARENACHAIN_PROGRAM_ADDRESS } from "../programs";
 
 export const SERVER_START_MATCH_DISCRIMINATOR: ReadonlyUint8Array =
@@ -55,6 +55,7 @@ export function getServerStartMatchDiscriminatorBytes(): ReadonlyUint8Array {
 export type ServerStartMatchInstruction<
   TProgram extends string = typeof ARENACHAIN_PROGRAM_ADDRESS,
   TAccountServerSigner extends string | AccountMeta<string> = string,
+  TAccountConfig extends string | AccountMeta<string> = string,
   TAccountGameServer extends string | AccountMeta<string> = string,
   TAccountArenaMatch extends string | AccountMeta<string> = string,
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
@@ -66,6 +67,9 @@ export type ServerStartMatchInstruction<
         ? ReadonlySignerAccount<TAccountServerSigner> &
             AccountSignerMeta<TAccountServerSigner>
         : TAccountServerSigner,
+      TAccountConfig extends string
+        ? ReadonlyAccount<TAccountConfig>
+        : TAccountConfig,
       TAccountGameServer extends string
         ? ReadonlyAccount<TAccountGameServer>
         : TAccountGameServer,
@@ -107,22 +111,26 @@ export function getServerStartMatchInstructionDataCodec(): FixedSizeCodec<
 
 export type ServerStartMatchAsyncInput<
   TAccountServerSigner extends InstructionSignerInput = InstructionSignerInput,
+  TAccountConfig extends InstructionAccountInput = InstructionAccountInput,
   TAccountGameServer extends InstructionAccountInput = InstructionAccountInput,
   TAccountArenaMatch extends InstructionAccountInput = InstructionAccountInput,
 > = {
   serverSigner: TAccountServerSigner;
+  config?: TAccountConfig;
   gameServer?: TAccountGameServer;
   arenaMatch: TAccountArenaMatch;
 };
 
 export async function getServerStartMatchInstructionAsync<
   TAccountServerSigner extends InstructionSignerInput,
+  TAccountConfig extends InstructionAccountInput,
   TAccountGameServer extends InstructionAccountInput,
   TAccountArenaMatch extends InstructionAccountInput,
   TProgramAddress extends Address = typeof ARENACHAIN_PROGRAM_ADDRESS,
 >(
   input: ServerStartMatchAsyncInput<
     TAccountServerSigner,
+    TAccountConfig,
     TAccountGameServer,
     TAccountArenaMatch
   >,
@@ -133,6 +141,10 @@ export async function getServerStartMatchInstructionAsync<
     ResolvedInstructionAccountMeta<
       TAccountServerSigner,
       InstructionAccountInputAddress<TAccountServerSigner>
+    >,
+    ResolvedInstructionAccountMeta<
+      TAccountConfig,
+      InstructionAccountInputAddress<TAccountConfig>
     >,
     ResolvedInstructionAccountMeta<
       TAccountGameServer,
@@ -157,6 +169,7 @@ export async function getServerStartMatchInstructionAsync<
       isSigner: true,
       isWritable: false,
     },
+    config: { value: input.config ?? null, isSigner: false, isWritable: false },
     gameServer: {
       value: input.gameServer ?? null,
       isSigner: false,
@@ -174,6 +187,9 @@ export async function getServerStartMatchInstructionAsync<
   >;
 
   // Resolve default values.
+  if (!accounts.config.value) {
+    accounts.config.value = await findConfigPda({ programAddress });
+  }
   if (!accounts.gameServer.value) {
     accounts.gameServer.value = await findServerStartMatchGameServerPda(
       {
@@ -189,6 +205,7 @@ export async function getServerStartMatchInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta("serverSigner", accounts.serverSigner),
+      getAccountMeta("config", accounts.config),
       getAccountMeta("gameServer", accounts.gameServer),
       getAccountMeta("arenaMatch", accounts.arenaMatch),
     ],
@@ -199,6 +216,10 @@ export async function getServerStartMatchInstructionAsync<
     ResolvedInstructionAccountMeta<
       TAccountServerSigner,
       InstructionAccountInputAddress<TAccountServerSigner>
+    >,
+    ResolvedInstructionAccountMeta<
+      TAccountConfig,
+      InstructionAccountInputAddress<TAccountConfig>
     >,
     ResolvedInstructionAccountMeta<
       TAccountGameServer,
@@ -213,22 +234,26 @@ export async function getServerStartMatchInstructionAsync<
 
 export type ServerStartMatchInput<
   TAccountServerSigner extends InstructionSignerInput = InstructionSignerInput,
+  TAccountConfig extends InstructionAccountInput = InstructionAccountInput,
   TAccountGameServer extends InstructionAccountInput = InstructionAccountInput,
   TAccountArenaMatch extends InstructionAccountInput = InstructionAccountInput,
 > = {
   serverSigner: TAccountServerSigner;
+  config: TAccountConfig;
   gameServer: TAccountGameServer;
   arenaMatch: TAccountArenaMatch;
 };
 
 export function getServerStartMatchInstruction<
   TAccountServerSigner extends InstructionSignerInput,
+  TAccountConfig extends InstructionAccountInput,
   TAccountGameServer extends InstructionAccountInput,
   TAccountArenaMatch extends InstructionAccountInput,
   TProgramAddress extends Address = typeof ARENACHAIN_PROGRAM_ADDRESS,
 >(
   input: ServerStartMatchInput<
     TAccountServerSigner,
+    TAccountConfig,
     TAccountGameServer,
     TAccountArenaMatch
   >,
@@ -238,6 +263,10 @@ export function getServerStartMatchInstruction<
   ResolvedInstructionAccountMeta<
     TAccountServerSigner,
     InstructionAccountInputAddress<TAccountServerSigner>
+  >,
+  ResolvedInstructionAccountMeta<
+    TAccountConfig,
+    InstructionAccountInputAddress<TAccountConfig>
   >,
   ResolvedInstructionAccountMeta<
     TAccountGameServer,
@@ -261,6 +290,7 @@ export function getServerStartMatchInstruction<
       isSigner: true,
       isWritable: false,
     },
+    config: { value: input.config ?? null, isSigner: false, isWritable: false },
     gameServer: {
       value: input.gameServer ?? null,
       isSigner: false,
@@ -280,6 +310,7 @@ export function getServerStartMatchInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta("serverSigner", accounts.serverSigner),
+      getAccountMeta("config", accounts.config),
       getAccountMeta("gameServer", accounts.gameServer),
       getAccountMeta("arenaMatch", accounts.arenaMatch),
     ],
@@ -290,6 +321,10 @@ export function getServerStartMatchInstruction<
     ResolvedInstructionAccountMeta<
       TAccountServerSigner,
       InstructionAccountInputAddress<TAccountServerSigner>
+    >,
+    ResolvedInstructionAccountMeta<
+      TAccountConfig,
+      InstructionAccountInputAddress<TAccountConfig>
     >,
     ResolvedInstructionAccountMeta<
       TAccountGameServer,
@@ -309,8 +344,9 @@ export type ParsedServerStartMatchInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     serverSigner: TAccountMetas[0];
-    gameServer: TAccountMetas[1];
-    arenaMatch: TAccountMetas[2];
+    config: TAccountMetas[1];
+    gameServer: TAccountMetas[2];
+    arenaMatch: TAccountMetas[3];
   };
   data: ServerStartMatchInstructionData;
 };
@@ -323,12 +359,12 @@ export function parseServerStartMatchInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedServerStartMatchInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
+  if (instruction.accounts.length < 4) {
     throw new SolanaError(
       SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
       {
         actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 3,
+        expectedAccountMetas: 4,
       },
     );
   }
@@ -342,6 +378,7 @@ export function parseServerStartMatchInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       serverSigner: getNextAccount(),
+      config: getNextAccount(),
       gameServer: getNextAccount(),
       arenaMatch: getNextAccount(),
     },

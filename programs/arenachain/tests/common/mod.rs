@@ -509,6 +509,7 @@ impl Env {
             arenachain::instruction::ServerStartMatch {},
             arenachain::accounts::ServerStartMatch {
                 server_signer: server.pubkey(),
+                config: config_pda(),
                 game_server: server_pda(&server.pubkey()),
                 arena_match: *m,
             },

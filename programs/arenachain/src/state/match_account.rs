@@ -44,6 +44,9 @@ pub struct Match {
     pub created_at: i64,
     pub joined_at: i64,
     pub started_at: i64,
+    /// Set at join: the server must start the match by then (`joined_at + window`).
+    pub start_deadline: i64,
+    /// Set at start: the result must arrive by then (`started_at + window`). 0 until started.
     pub result_deadline: i64,
     pub result_kind: Option<ResultKind>,
     /// `Pubkey::default()` until a Win/Forfeit result settles.
@@ -62,6 +65,15 @@ impl Match {
         self.entry_fee
             .checked_mul(2)
             .ok_or_else(|| error!(crate::errors::ArenaError::MathOverflow))
+    }
+
+    /// After this time, with nothing settled, anyone can refund both players.
+    pub fn expiry_deadline(&self) -> Option<i64> {
+        match self.status {
+            MatchStatus::Full => Some(self.start_deadline),
+            MatchStatus::InProgress => Some(self.result_deadline),
+            _ => None,
+        }
     }
 
     pub fn is_player(&self, key: &Pubkey) -> bool {

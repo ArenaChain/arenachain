@@ -4,13 +4,15 @@ use crate::{
     constants::*,
     errors::ArenaError,
     events::MatchStarted,
-    state::{GameServer, Match, MatchStatus},
+    state::{GameServer, GlobalConfig, Match, MatchStatus},
 };
 
 /// The match's assigned game server marks a full match as live.
 #[derive(Accounts)]
 pub struct ServerStartMatch<'info> {
     pub server_signer: Signer<'info>,
+    #[account(seeds = [CONFIG_SEED], bump = config.bump)]
+    pub config: Account<'info, GlobalConfig>,
     #[account(
         seeds = [SERVER_SEED, server_signer.key().as_ref()],
         bump = game_server.bump,
@@ -29,14 +31,18 @@ pub struct ServerStartMatch<'info> {
 
 pub fn handle_server_start_match(ctx: Context<ServerStartMatch>) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
+    let window = ctx.accounts.config.result_window_secs;
     let m = &mut ctx.accounts.arena_match;
-    require!(now <= m.result_deadline, ArenaError::ResultDeadlinePassed);
+    require!(now <= m.start_deadline, ArenaError::ResultDeadlinePassed);
     m.status = MatchStatus::InProgress;
     m.started_at = now;
+    // The result window counts from the real start, so a slow ready-up can't eat into it.
+    m.result_deadline = now.checked_add(window).ok_or(ArenaError::MathOverflow)?;
 
     emit!(MatchStarted {
         arena_match: m.key(),
         game_server: ctx.accounts.game_server.key(),
+        result_deadline: m.result_deadline,
     });
     Ok(())
 }

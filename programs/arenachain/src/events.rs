@@ -14,7 +14,7 @@ pub struct MatchCreated {
 pub struct MatchJoined {
     pub arena_match: Pubkey,
     pub player_b: Pubkey,
-    pub result_deadline: i64,
+    pub start_deadline: i64,
 }
 
 #[event]
@@ -26,6 +26,7 @@ pub struct MatchCancelled {
 pub struct MatchStarted {
     pub arena_match: Pubkey,
     pub game_server: Pubkey,
+    pub result_deadline: i64,
 }
 
 #[event]

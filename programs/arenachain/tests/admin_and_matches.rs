@@ -138,7 +138,8 @@ fn create_and_join_happy_path() {
     let joined = env.get_match(&m);
     assert_eq!(joined.status, MatchStatus::Full);
     assert_eq!(joined.player_b, b.key());
-    assert_eq!(joined.result_deadline, START_TS + RESULT_WINDOW_SECS);
+    assert_eq!(joined.start_deadline, START_TS + RESULT_WINDOW_SECS);
+    assert_eq!(joined.result_deadline, 0);
     assert_eq!(env.balance(&vault_pda(&m)), ENTRY * 2);
     assert_eq!(env.balance(&b.token), ENTRY * 2);
 }

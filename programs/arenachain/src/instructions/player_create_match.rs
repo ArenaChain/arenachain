@@ -80,6 +80,7 @@ pub fn handle_player_create_match(
     m.created_at = clock.unix_timestamp;
     m.joined_at = 0;
     m.started_at = 0;
+    m.start_deadline = 0;
     m.result_deadline = 0;
     m.result_kind = None;
     m.winner = Pubkey::default();

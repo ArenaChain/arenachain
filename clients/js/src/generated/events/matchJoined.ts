@@ -40,13 +40,13 @@ export function getMatchJoinedEventDiscriminatorBytes(): ReadonlyUint8Array {
 export type MatchJoinedEvent = {
   arenaMatch: Address;
   playerB: Address;
-  resultDeadline: bigint;
+  startDeadline: bigint;
 };
 
 export type MatchJoinedEventArgs = {
   arenaMatch: Address;
   playerB: Address;
-  resultDeadline: number | bigint;
+  startDeadline: number | bigint;
 };
 
 /** Gets the encoder for {@link MatchJoinedEventArgs} event data. */
@@ -55,7 +55,7 @@ export function getMatchJoinedEventEncoder(): FixedSizeEncoder<MatchJoinedEventA
     getStructEncoder([
       ["arenaMatch", getAddressEncoder()],
       ["playerB", getAddressEncoder()],
-      ["resultDeadline", getI64Encoder()],
+      ["startDeadline", getI64Encoder()],
     ]),
     [getConstantEncoder(MATCH_JOINED_EVENT_DISCRIMINATOR)],
   );
@@ -67,7 +67,7 @@ export function getMatchJoinedEventDecoder(): FixedSizeDecoder<MatchJoinedEvent>
     getStructDecoder([
       ["arenaMatch", getAddressDecoder()],
       ["playerB", getAddressDecoder()],
-      ["resultDeadline", getI64Decoder()],
+      ["startDeadline", getI64Decoder()],
     ]),
     [getConstantDecoder(MATCH_JOINED_EVENT_DISCRIMINATOR)],
   );
