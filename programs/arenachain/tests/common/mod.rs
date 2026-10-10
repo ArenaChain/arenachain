@@ -476,6 +476,7 @@ impl Env {
                 config: config_pda(),
                 joiner_profile: profile_pda(joiner),
                 arena_match: *m,
+                game_server: server_pda(&self.server.pubkey()),
                 mint: self.mint,
                 vault: vault_pda(m),
                 joiner_token: *joiner_token,

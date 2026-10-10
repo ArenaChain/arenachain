@@ -275,7 +275,7 @@ fn join_rejects_wrong_vault() {
     let m2 = match_pda(&a.key(), 2);
     let mut i = env.join_match_ix(&b.key(), &b.token, &m1);
     // Point the vault at match 2's vault.
-    i.accounts[5].pubkey = vault_pda(&m2);
+    i.accounts[6].pubkey = vault_pda(&m2);
     assert_code(env.send(&[i], &[&b.kp]), code(AnchorError::ConstraintSeeds));
 }
 

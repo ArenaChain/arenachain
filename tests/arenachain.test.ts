@@ -88,7 +88,13 @@ async function startedMatch(a: Player, b: Player, nonce: bigint, entryFee: bigin
         }),
     );
     await client.sendTransaction(
-        await getPlayerJoinMatchInstructionAsync({ joiner: b.signer, arenaMatch, mint, joinerToken: b.token }),
+        await getPlayerJoinMatchInstructionAsync({
+            joiner: b.signer,
+            arenaMatch,
+            gameServer,
+            mint,
+            joinerToken: b.token,
+        }),
     );
     await client.sendTransaction(await getServerStartMatchInstructionAsync({ serverSigner: server, arenaMatch }));
     return arenaMatch;

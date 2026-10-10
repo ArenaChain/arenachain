@@ -339,3 +339,41 @@ fn l1_void_refund_allowed_while_paused() {
         code(arenachain::errors::ArenaError::Paused),
     );
 }
+
+// ======================= L2: join requires the match's server to be active =======================
+
+#[test]
+fn l2_join_rejected_when_server_inactive() {
+    let mut env = Env::new();
+    let a = env.player(ENTRY);
+    let b = env.player(ENTRY);
+    env.create_match(&a, 1, ENTRY).unwrap();
+    let m = match_pda(&a.key(), 1);
+    let key = env.server.pubkey();
+    env.set_server_active(&key, false).unwrap();
+    assert_code(
+        env.join_match(&b, &m),
+        code(arenachain::errors::ArenaError::ServerInactive),
+    );
+    assert_eq!(env.balance(&b.token), ENTRY);
+    env.set_server_active(&key, true).unwrap();
+    env.join_match(&b, &m).unwrap();
+}
+
+#[test]
+fn l2_join_rejects_another_servers_account() {
+    // An attacker can't satisfy the check by passing some other (active) server.
+    let mut env = Env::new();
+    let other = solana_keypair::Keypair::new();
+    env.register_server(&other).unwrap();
+    let a = env.player(ENTRY);
+    let b = env.player(ENTRY);
+    env.create_match(&a, 1, ENTRY).unwrap();
+    let m = match_pda(&a.key(), 1);
+    let mut i = env.join_match_ix(&b.key(), &b.token, &m);
+    i.accounts[4].pubkey = server_pda(&other.pubkey());
+    assert_code(
+        env.send(&[i], &[&b.kp]),
+        code(anchor_lang::error::ErrorCode::ConstraintAddress),
+    );
+}

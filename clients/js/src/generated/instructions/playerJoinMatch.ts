@@ -58,6 +58,7 @@ export type PlayerJoinMatchInstruction<
   TAccountConfig extends string | AccountMeta<string> = string,
   TAccountJoinerProfile extends string | AccountMeta<string> = string,
   TAccountArenaMatch extends string | AccountMeta<string> = string,
+  TAccountGameServer extends string | AccountMeta<string> = string,
   TAccountMint extends string | AccountMeta<string> = string,
   TAccountVault extends string | AccountMeta<string> = string,
   TAccountJoinerToken extends string | AccountMeta<string> = string,
@@ -81,6 +82,9 @@ export type PlayerJoinMatchInstruction<
       TAccountArenaMatch extends string
         ? WritableAccount<TAccountArenaMatch>
         : TAccountArenaMatch,
+      TAccountGameServer extends string
+        ? ReadonlyAccount<TAccountGameServer>
+        : TAccountGameServer,
       TAccountMint extends string
         ? ReadonlyAccount<TAccountMint>
         : TAccountMint,
@@ -132,6 +136,7 @@ export type PlayerJoinMatchAsyncInput<
   TAccountJoinerProfile extends InstructionAccountInput =
     InstructionAccountInput,
   TAccountArenaMatch extends InstructionAccountInput = InstructionAccountInput,
+  TAccountGameServer extends InstructionAccountInput = InstructionAccountInput,
   TAccountMint extends InstructionAccountInput = InstructionAccountInput,
   TAccountVault extends InstructionAccountInput = InstructionAccountInput,
   TAccountJoinerToken extends InstructionAccountInput = InstructionAccountInput,
@@ -142,6 +147,8 @@ export type PlayerJoinMatchAsyncInput<
   config?: TAccountConfig;
   joinerProfile?: TAccountJoinerProfile;
   arenaMatch: TAccountArenaMatch;
+  /** The match's server must still be active, or the match could never start. */
+  gameServer: TAccountGameServer;
   mint: TAccountMint;
   vault?: TAccountVault;
   joinerToken: TAccountJoinerToken;
@@ -153,6 +160,7 @@ export async function getPlayerJoinMatchInstructionAsync<
   TAccountConfig extends InstructionAccountInput,
   TAccountJoinerProfile extends InstructionAccountInput,
   TAccountArenaMatch extends InstructionAccountInput,
+  TAccountGameServer extends InstructionAccountInput,
   TAccountMint extends InstructionAccountInput,
   TAccountVault extends InstructionAccountInput,
   TAccountJoinerToken extends InstructionAccountInput,
@@ -164,6 +172,7 @@ export async function getPlayerJoinMatchInstructionAsync<
     TAccountConfig,
     TAccountJoinerProfile,
     TAccountArenaMatch,
+    TAccountGameServer,
     TAccountMint,
     TAccountVault,
     TAccountJoinerToken,
@@ -188,6 +197,10 @@ export async function getPlayerJoinMatchInstructionAsync<
     ResolvedInstructionAccountMeta<
       TAccountArenaMatch,
       InstructionAccountInputAddress<TAccountArenaMatch>
+    >,
+    ResolvedInstructionAccountMeta<
+      TAccountGameServer,
+      InstructionAccountInputAddress<TAccountGameServer>
     >,
     ResolvedInstructionAccountMeta<
       TAccountMint,
@@ -226,6 +239,11 @@ export async function getPlayerJoinMatchInstructionAsync<
       value: input.arenaMatch ?? null,
       isSigner: false,
       isWritable: true,
+    },
+    gameServer: {
+      value: input.gameServer ?? null,
+      isSigner: false,
+      isWritable: false,
     },
     mint: { value: input.mint ?? null, isSigner: false, isWritable: false },
     vault: { value: input.vault ?? null, isSigner: false, isWritable: true },
@@ -282,6 +300,7 @@ export async function getPlayerJoinMatchInstructionAsync<
       getAccountMeta("config", accounts.config),
       getAccountMeta("joinerProfile", accounts.joinerProfile),
       getAccountMeta("arenaMatch", accounts.arenaMatch),
+      getAccountMeta("gameServer", accounts.gameServer),
       getAccountMeta("mint", accounts.mint),
       getAccountMeta("vault", accounts.vault),
       getAccountMeta("joinerToken", accounts.joinerToken),
@@ -308,6 +327,10 @@ export async function getPlayerJoinMatchInstructionAsync<
       InstructionAccountInputAddress<TAccountArenaMatch>
     >,
     ResolvedInstructionAccountMeta<
+      TAccountGameServer,
+      InstructionAccountInputAddress<TAccountGameServer>
+    >,
+    ResolvedInstructionAccountMeta<
       TAccountMint,
       InstructionAccountInputAddress<TAccountMint>
     >,
@@ -332,6 +355,7 @@ export type PlayerJoinMatchInput<
   TAccountJoinerProfile extends InstructionAccountInput =
     InstructionAccountInput,
   TAccountArenaMatch extends InstructionAccountInput = InstructionAccountInput,
+  TAccountGameServer extends InstructionAccountInput = InstructionAccountInput,
   TAccountMint extends InstructionAccountInput = InstructionAccountInput,
   TAccountVault extends InstructionAccountInput = InstructionAccountInput,
   TAccountJoinerToken extends InstructionAccountInput = InstructionAccountInput,
@@ -342,6 +366,8 @@ export type PlayerJoinMatchInput<
   config: TAccountConfig;
   joinerProfile: TAccountJoinerProfile;
   arenaMatch: TAccountArenaMatch;
+  /** The match's server must still be active, or the match could never start. */
+  gameServer: TAccountGameServer;
   mint: TAccountMint;
   vault: TAccountVault;
   joinerToken: TAccountJoinerToken;
@@ -353,6 +379,7 @@ export function getPlayerJoinMatchInstruction<
   TAccountConfig extends InstructionAccountInput,
   TAccountJoinerProfile extends InstructionAccountInput,
   TAccountArenaMatch extends InstructionAccountInput,
+  TAccountGameServer extends InstructionAccountInput,
   TAccountMint extends InstructionAccountInput,
   TAccountVault extends InstructionAccountInput,
   TAccountJoinerToken extends InstructionAccountInput,
@@ -364,6 +391,7 @@ export function getPlayerJoinMatchInstruction<
     TAccountConfig,
     TAccountJoinerProfile,
     TAccountArenaMatch,
+    TAccountGameServer,
     TAccountMint,
     TAccountVault,
     TAccountJoinerToken,
@@ -387,6 +415,10 @@ export function getPlayerJoinMatchInstruction<
   ResolvedInstructionAccountMeta<
     TAccountArenaMatch,
     InstructionAccountInputAddress<TAccountArenaMatch>
+  >,
+  ResolvedInstructionAccountMeta<
+    TAccountGameServer,
+    InstructionAccountInputAddress<TAccountGameServer>
   >,
   ResolvedInstructionAccountMeta<
     TAccountMint,
@@ -425,6 +457,11 @@ export function getPlayerJoinMatchInstruction<
       isSigner: false,
       isWritable: true,
     },
+    gameServer: {
+      value: input.gameServer ?? null,
+      isSigner: false,
+      isWritable: false,
+    },
     mint: { value: input.mint ?? null, isSigner: false, isWritable: false },
     vault: { value: input.vault ?? null, isSigner: false, isWritable: true },
     joinerToken: {
@@ -455,6 +492,7 @@ export function getPlayerJoinMatchInstruction<
       getAccountMeta("config", accounts.config),
       getAccountMeta("joinerProfile", accounts.joinerProfile),
       getAccountMeta("arenaMatch", accounts.arenaMatch),
+      getAccountMeta("gameServer", accounts.gameServer),
       getAccountMeta("mint", accounts.mint),
       getAccountMeta("vault", accounts.vault),
       getAccountMeta("joinerToken", accounts.joinerToken),
@@ -479,6 +517,10 @@ export function getPlayerJoinMatchInstruction<
     ResolvedInstructionAccountMeta<
       TAccountArenaMatch,
       InstructionAccountInputAddress<TAccountArenaMatch>
+    >,
+    ResolvedInstructionAccountMeta<
+      TAccountGameServer,
+      InstructionAccountInputAddress<TAccountGameServer>
     >,
     ResolvedInstructionAccountMeta<
       TAccountMint,
@@ -509,10 +551,12 @@ export type ParsedPlayerJoinMatchInstruction<
     config: TAccountMetas[1];
     joinerProfile: TAccountMetas[2];
     arenaMatch: TAccountMetas[3];
-    mint: TAccountMetas[4];
-    vault: TAccountMetas[5];
-    joinerToken: TAccountMetas[6];
-    tokenProgram: TAccountMetas[7];
+    /** The match's server must still be active, or the match could never start. */
+    gameServer: TAccountMetas[4];
+    mint: TAccountMetas[5];
+    vault: TAccountMetas[6];
+    joinerToken: TAccountMetas[7];
+    tokenProgram: TAccountMetas[8];
   };
   data: PlayerJoinMatchInstructionData;
 };
@@ -525,12 +569,12 @@ export function parsePlayerJoinMatchInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedPlayerJoinMatchInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 8) {
+  if (instruction.accounts.length < 9) {
     throw new SolanaError(
       SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
       {
         actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 8,
+        expectedAccountMetas: 9,
       },
     );
   }
@@ -547,6 +591,7 @@ export function parsePlayerJoinMatchInstruction<
       config: getNextAccount(),
       joinerProfile: getNextAccount(),
       arenaMatch: getNextAccount(),
+      gameServer: getNextAccount(),
       mint: getNextAccount(),
       vault: getNextAccount(),
       joinerToken: getNextAccount(),

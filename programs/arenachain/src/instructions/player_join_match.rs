@@ -5,7 +5,7 @@ use crate::{
     constants::*,
     errors::ArenaError,
     events::MatchJoined,
-    state::{GlobalConfig, Match, MatchStatus, PlayerProfile},
+    state::{GameServer, GlobalConfig, Match, MatchStatus, PlayerProfile},
 };
 
 #[derive(Accounts)]
@@ -25,6 +25,12 @@ pub struct PlayerJoinMatch<'info> {
         constraint = arena_match.player_a != joiner.key() @ ArenaError::CannotJoinOwnMatch,
     )]
     pub arena_match: Box<Account<'info, Match>>,
+    /// The match's server must still be active, or the match could never start.
+    #[account(
+        address = arena_match.game_server,
+        constraint = game_server.active @ ArenaError::ServerInactive,
+    )]
+    pub game_server: Box<Account<'info, GameServer>>,
     pub mint: Box<Account<'info, Mint>>,
     #[account(
         mut,
