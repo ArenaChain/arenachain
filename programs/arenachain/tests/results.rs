@@ -115,8 +115,8 @@ fn double_settle_rejected() {
     let f = env.fixture(ENTRY, true);
     env.submit_signed(&f, ResultKind::Win, f.a.key()).unwrap();
     // Same signed result again, and a conflicting one.
-    assert_failed(env.submit_signed(&f, ResultKind::Win, f.a.key()));
-    assert_failed(env.submit_signed(&f, ResultKind::Void, Pubkey::default()));
+    assert_closed_vault(env.submit_signed(&f, ResultKind::Win, f.a.key()));
+    assert_closed_vault(env.submit_signed(&f, ResultKind::Void, Pubkey::default()));
 }
 
 #[test]
@@ -139,7 +139,7 @@ fn refund_after_payout_rejected() {
     let a_after = env.balance(&f.a.token);
     // Vault is closed after payout; the cancel can't load it, and the status check backs that up.
     let i = env.cancel_match_ix(&f.a.key(), &f.a.token, &f.m);
-    assert_failed(env.send(&[i], &[&f.a.kp]));
+    assert_closed_vault(env.send(&[i], &[&f.a.kp]));
     assert_eq!(env.balance(&f.a.token), a_after);
     assert_eq!(env.get_match(&f.m).status, MatchStatus::Settled);
 }
@@ -299,7 +299,13 @@ fn invalid_signature_bytes_rejected_by_precompile() {
     let (mut sig, submit) = signed_ixs(&mut env, &f, ResultKind::Win, f.b.key());
     // Flip a byte of the signature (pubkey is at 16..48, signature at 48..112).
     sig.data[60] ^= 0xff;
-    assert_failed(env.send(&[sig, submit], &[&f.b.kp]));
+    // Rejected by the precompile itself (instruction 0), before the program runs.
+    let err = assert_failed(env.send(&[sig, submit], &[&f.b.kp]));
+    assert!(
+        format!("{:?}", err.err).starts_with("InstructionError(0,"),
+        "{:?}",
+        err.err
+    );
     assert_eq!(env.get_match(&f.m).status, MatchStatus::InProgress);
 }
 
@@ -550,7 +556,7 @@ fn pool_at_threshold_is_held_then_claimed() {
     assert!(env.get_match(&f.m).paid_out);
 
     let b_after = env.balance(&b_token);
-    assert_failed(env.claim(&f, &b_token));
+    assert_closed_vault(env.claim(&f, &b_token));
     assert_eq!(env.balance(&b_token), b_after);
 }
 
@@ -565,7 +571,7 @@ fn pool_below_threshold_paid_immediately() {
     assert_eq!(m.unlock_at, 0);
     let a_token = f.a.token;
     let a_after = env.balance(&a_token);
-    assert_failed(env.claim(&f, &a_token));
+    assert_closed_vault(env.claim(&f, &a_token));
     assert_eq!(env.balance(&a_token), a_after);
 }
 

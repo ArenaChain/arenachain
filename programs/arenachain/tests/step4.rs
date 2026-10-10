@@ -112,7 +112,7 @@ fn refund_after_settlement_or_twice_rejected() {
     env.advance(RESULT_WINDOW_SECS + 1);
     env.refund_expired(&f).unwrap();
     let a_after = env.balance(&f.a.token);
-    assert_failed(env.refund_expired(&f));
+    assert_closed_vault(env.refund_expired(&f));
     assert_eq!(env.balance(&f.a.token), a_after);
 }
 
@@ -469,7 +469,10 @@ fn match_vault_cannot_be_drained_as_fee_vault() {
     let admin = env.admin.insecure_clone();
     let mut i = env.withdraw_fees_ix(&admin.pubkey(), &t_token, 1);
     i.accounts[3].pubkey = vault_pda(&f.m);
-    assert_failed(env.send(&[i], &[&admin]));
+    assert_code(
+        env.send(&[i], &[&admin]),
+        code(AnchorError::ConstraintHasOne),
+    );
     assert_eq!(env.balance(&vault_pda(&f.m)), HOLD_THRESHOLD * 2);
 }
 

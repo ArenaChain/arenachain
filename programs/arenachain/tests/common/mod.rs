@@ -90,6 +90,35 @@ pub fn assert_code(res: TransactionResult, code: u32) {
     );
 }
 
+/// Asserts failure with `code` and a log line containing `needle` (e.g. which account caused it).
+pub fn assert_code_log(res: TransactionResult, code: u32, needle: &str) {
+    let err = res.expect_err("transaction should have failed");
+    let rendered = format!("{:?}", err.err);
+    assert!(
+        rendered.contains(&format!("Custom({code})")),
+        "expected Custom({code}), got {rendered}"
+    );
+    assert!(
+        err.meta.logs.iter().any(|l| l.contains(needle)),
+        "no log containing {needle:?}: {:#?}",
+        err.meta.logs
+    );
+}
+
+/// A repeat refund/claim/settle after the vault was emptied and closed.
+pub fn assert_closed_vault(res: TransactionResult) {
+    assert_code_log(
+        res,
+        anchor_lang::error::ErrorCode::AccountNotInitialized.into(),
+        "caused by account: vault",
+    );
+}
+
+/// A second `init` of the same PDA (System Program `AccountAlreadyInUse`).
+pub fn assert_already_in_use(res: TransactionResult) {
+    assert_code_log(res, 0, "already in use");
+}
+
 pub fn assert_failed(res: TransactionResult) -> FailedTransactionMetadata {
     res.expect_err("transaction should have failed")
 }

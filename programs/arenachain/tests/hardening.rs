@@ -422,6 +422,7 @@ use spl_associated_token_account_interface::{
     address::get_associated_token_address, instruction::create_associated_token_account_idempotent,
 };
 
+#[derive(Clone, Copy)]
 enum Abandon {
     Close,
     GiveAway,
@@ -508,7 +509,18 @@ fn extra_expiry_refund_survives_closed_or_given_away_token_account() {
         env.advance(RESULT_WINDOW_SECS + 1);
 
         // The original account no longer qualifies.
-        assert_failed(env.refund_expired(&f));
+        let (code_, log) = match how {
+            Abandon::Close => (
+                anchor_lang::error::ErrorCode::AccountNotInitialized.into(),
+                "caused by account: player_a_token",
+            ),
+            // Anchor doesn't name the account for token-owner violations.
+            Abandon::GiveAway => (
+                anchor_lang::error::ErrorCode::ConstraintTokenOwner.into(),
+                "ConstraintTokenOwner",
+            ),
+        };
+        assert_code_log(env.refund_expired(&f), code_, log);
 
         let ata = get_associated_token_address(&f.a.key(), &env.mint);
         let i = refund_with_a_token(&env, &f, ata);

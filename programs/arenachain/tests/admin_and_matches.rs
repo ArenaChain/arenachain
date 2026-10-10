@@ -38,7 +38,7 @@ fn initialize_config_rejects_non_upgrade_authority() {
 fn initialize_config_only_once() {
     let mut env = Env::new();
     let admin = env.admin.insecure_clone();
-    assert_failed(env.init_config(&admin, default_params()));
+    assert_already_in_use(env.init_config(&admin, default_params()));
 }
 
 #[test]
@@ -114,7 +114,7 @@ fn create_profile_defaults_and_once() {
     assert_eq!((p.wins, p.losses, p.reputation, p.steam_id), (0, 0, 100, 0));
     assert_eq!((p.total_forfeits, p.recent_forfeits), (0, [0, 0]));
     assert_eq!(p.created_at, START_TS);
-    assert_failed(env.create_profile(&w));
+    assert_already_in_use(env.create_profile(&w));
 }
 
 // ---------- create / join ----------
@@ -239,7 +239,8 @@ fn create_rejects_pool_overflow() {
 fn create_insufficient_funds_fails() {
     let mut env = Env::new();
     let a = env.player(ENTRY - 1);
-    assert_failed(env.create_match(&a, 1, ENTRY));
+    // SPL Token InsufficientFunds (custom error 1).
+    assert_code_log(env.create_match(&a, 1, ENTRY), 1, "insufficient funds");
 }
 
 #[test]
@@ -295,7 +296,7 @@ fn cancel_open_match_refunds_and_closes_vault() {
 
     // Refund exactly once (the closed vault or the status check stops a second one).
     let i = env.cancel_match_ix(&a.key(), &a.token, &m);
-    assert_failed(env.send(&[i], &[&a.kp]));
+    assert_closed_vault(env.send(&[i], &[&a.kp]));
     assert_eq!(env.balance(&a.token), ENTRY);
 }
 
@@ -415,5 +416,5 @@ fn match_seeds_bind_creator() {
     env.create_match(&a, 1, ENTRY).unwrap();
     env.create_match(&b, 1, ENTRY).unwrap();
     assert_ne!(match_pda(&a.key(), 1), match_pda(&b.key(), 1));
-    assert_failed(env.create_match(&a, 1, ENTRY));
+    assert_already_in_use(env.create_match(&a, 1, ENTRY));
 }
