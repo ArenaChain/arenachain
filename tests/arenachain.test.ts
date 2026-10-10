@@ -285,18 +285,27 @@ test('expired match: anyone refunds both players after the deadline', async () =
 });
 
 test('admin withdraws collected fees to the treasury', async () => {
-    const collected = await balance(feeVault);
-    assert.ok(collected > 0n, 'earlier tests collected fees');
+    // Self-contained: settle a match here so the vault holds a known fee.
+    const entry = 4n * USDC;
+    const a = await player(entry);
+    const b = await player(entry);
+    const before = await balance(feeVault);
+    const arenaMatch = await startedMatch(a, b, 1n, entry);
+    await submitSignedResult(arenaMatch, a, b, ResultKind.Win, a.signer.address);
+    const fee = (entry * 2n * 500n) / 10_000n;
+    assert.equal((await balance(feeVault)) - before, fee);
+
     client.surfnet.fundToken(treasury.address, mint, 0);
     const treasuryToken = address(client.surfnet.getAta(treasury.address, mint));
+    const treasuryBefore = await balance(treasuryToken);
     await client.sendTransaction(
         await getAdminWithdrawFeesInstructionAsync({
             admin: client.payer,
             mint,
             treasuryToken,
-            amount: collected,
+            amount: fee,
         }),
     );
-    assert.equal(await balance(treasuryToken), collected);
-    assert.equal(await balance(feeVault), 0n);
+    assert.equal((await balance(treasuryToken)) - treasuryBefore, fee);
+    assert.equal(await balance(feeVault), before);
 });
