@@ -208,15 +208,19 @@ impl Env {
     // ---------- tokens ----------
 
     pub fn create_mint(&mut self) -> Pubkey {
+        self.create_mint_with(DECIMALS, None)
+    }
+
+    pub fn create_mint_with(&mut self, decimals: u8, freeze_authority: Option<Pubkey>) -> Pubkey {
         let key = Keypair::new().pubkey();
         let mut data = vec![0u8; SplMint::LEN];
         SplMint::pack(
             SplMint {
                 mint_authority: COption::Some(Pubkey::new_unique()),
                 supply: u64::MAX,
-                decimals: DECIMALS,
+                decimals,
                 is_initialized: true,
-                freeze_authority: COption::None,
+                freeze_authority: freeze_authority.map_or(COption::None, COption::Some),
             },
             &mut data,
         )

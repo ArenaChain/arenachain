@@ -159,3 +159,27 @@ fn m1_initialize_rejects_out_of_bound_timing() {
     );
     env.init_config(&admin, default_params()).unwrap();
 }
+
+// ======================= M2: config mint must be plain 6-decimal, unfreezable =======================
+
+#[test]
+fn m2_initialize_rejects_freezable_or_wrong_decimal_mint() {
+    use arenachain::errors::ArenaError;
+    let mut env = Env::bare();
+    let admin = env.admin.insecure_clone();
+
+    env.mint = env.create_mint_with(6, Some(Pubkey::new_unique()));
+    assert_code(
+        env.init_config(&admin, default_params()),
+        code(ArenaError::InvalidMint),
+    );
+
+    env.mint = env.create_mint_with(9, None);
+    assert_code(
+        env.init_config(&admin, default_params()),
+        code(ArenaError::InvalidMint),
+    );
+
+    env.mint = env.create_mint_with(6, None);
+    env.init_config(&admin, default_params()).unwrap();
+}

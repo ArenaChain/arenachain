@@ -54,6 +54,8 @@ export const ARENACHAIN_ERROR__PAYOUT_LOCKED = 0x1781; // 6017
 export const ARENACHAIN_ERROR__NOT_EXPIRED = 0x1782; // 6018
 /** InvalidAmount: Invalid withdrawal amount */
 export const ARENACHAIN_ERROR__INVALID_AMOUNT = 0x1783; // 6019
+/** InvalidMint: Mint must have 6 decimals and no freeze authority */
+export const ARENACHAIN_ERROR__INVALID_MINT = 0x1784; // 6020
 
 export type ArenachainError =
   | typeof ARENACHAIN_ERROR__ALREADY_PAID
@@ -61,6 +63,7 @@ export type ArenachainError =
   | typeof ARENACHAIN_ERROR__INVALID_AMOUNT
   | typeof ARENACHAIN_ERROR__INVALID_CONFIG_PARAM
   | typeof ARENACHAIN_ERROR__INVALID_MATCH_STATUS
+  | typeof ARENACHAIN_ERROR__INVALID_MINT
   | typeof ARENACHAIN_ERROR__INVALID_WINNER
   | typeof ARENACHAIN_ERROR__MALFORMED_ED25519_INSTRUCTION
   | typeof ARENACHAIN_ERROR__MATH_OVERFLOW
@@ -85,6 +88,7 @@ if (process.env["NODE_ENV"] !== "production") {
     [ARENACHAIN_ERROR__INVALID_AMOUNT]: `Invalid withdrawal amount`,
     [ARENACHAIN_ERROR__INVALID_CONFIG_PARAM]: `Invalid config parameter`,
     [ARENACHAIN_ERROR__INVALID_MATCH_STATUS]: `Match is not in the required status`,
+    [ARENACHAIN_ERROR__INVALID_MINT]: `Mint must have 6 decimals and no freeze authority`,
     [ARENACHAIN_ERROR__INVALID_WINNER]: `Winner must be one of the match's players`,
     [ARENACHAIN_ERROR__MALFORMED_ED25519_INSTRUCTION]: `Malformed Ed25519 instruction`,
     [ARENACHAIN_ERROR__MATH_OVERFLOW]: `Arithmetic overflow`,

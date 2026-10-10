@@ -22,6 +22,11 @@ pub struct AdminInitializeConfig<'info> {
         bump
     )]
     pub config: Box<Account<'info, GlobalConfig>>,
+    /// No freeze authority: whoever held it could freeze match vaults and lock escrow.
+    #[account(
+        constraint = usdc_mint.freeze_authority.is_none() && usdc_mint.decimals == USDC_DECIMALS
+            @ ArenaError::InvalidMint,
+    )]
     pub usdc_mint: Box<Account<'info, Mint>>,
     #[account(
         init,

@@ -42,4 +42,6 @@ pub enum ArenaError {
     NotExpired,
     #[msg("Invalid withdrawal amount")]
     InvalidAmount,
+    #[msg("Mint must have 6 decimals and no freeze authority")]
+    InvalidMint,
 }

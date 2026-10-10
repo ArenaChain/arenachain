@@ -171,6 +171,7 @@ export type AdminInitializeConfigAsyncInput<
 > = {
   authority: TAccountAuthority;
   config?: TAccountConfig;
+  /** No freeze authority: whoever held it could freeze match vaults and lock escrow. */
   usdcMint: TAccountUsdcMint;
   feeVault?: TAccountFeeVault;
   program?: TAccountProgram;
@@ -381,6 +382,7 @@ export type AdminInitializeConfigInput<
 > = {
   authority: TAccountAuthority;
   config: TAccountConfig;
+  /** No freeze authority: whoever held it could freeze match vaults and lock escrow. */
   usdcMint: TAccountUsdcMint;
   feeVault: TAccountFeeVault;
   program?: TAccountProgram;
@@ -577,6 +579,7 @@ export type ParsedAdminInitializeConfigInstruction<
   accounts: {
     authority: TAccountMetas[0];
     config: TAccountMetas[1];
+    /** No freeze authority: whoever held it could freeze match vaults and lock escrow. */
     usdcMint: TAccountMetas[2];
     feeVault: TAccountMetas[3];
     program: TAccountMetas[4];

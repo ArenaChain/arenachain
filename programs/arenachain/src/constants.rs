@@ -13,6 +13,9 @@ pub const MATCH_SEED: &[u8] = b"match";
 #[constant]
 pub const VAULT_SEED: &[u8] = b"vault";
 
+#[constant]
+pub const USDC_DECIMALS: u8 = 6;
+
 /// Platform fee on `Win` results, in basis points. Fixed in code so no admin can change it.
 #[constant]
 pub const FEE_BPS: u64 = 500;

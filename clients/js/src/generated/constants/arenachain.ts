@@ -42,6 +42,8 @@ export const SERVER_SEED: ReadonlyUint8Array = new Uint8Array([
 
 export const STARTING_ELO: number = 1000;
 
+export const USDC_DECIMALS: number = 6;
+
 export const VAULT_SEED: ReadonlyUint8Array = new Uint8Array([
   118, 97, 117, 108, 116,
 ]);
