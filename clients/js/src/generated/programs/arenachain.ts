@@ -48,8 +48,11 @@ import {
   type PlayerProfileArgs,
 } from "../accounts";
 import {
+  getAdminAcceptAdminInstructionAsync,
   getAdminInitializeConfigInstructionAsync,
+  getAdminProposeAdminInstructionAsync,
   getAdminRegisterServerInstructionAsync,
+  getAdminSetDisputeAuthorityInstructionAsync,
   getAdminSetPausedInstructionAsync,
   getAdminSetServerActiveInstructionAsync,
   getAdminSetTreasuryInstructionAsync,
@@ -63,8 +66,11 @@ import {
   getRefundExpiredInstructionAsync,
   getServerStartMatchInstructionAsync,
   getSubmitResultInstructionAsync,
+  parseAdminAcceptAdminInstruction,
   parseAdminInitializeConfigInstruction,
+  parseAdminProposeAdminInstruction,
   parseAdminRegisterServerInstruction,
+  parseAdminSetDisputeAuthorityInstruction,
   parseAdminSetPausedInstruction,
   parseAdminSetServerActiveInstruction,
   parseAdminSetTreasuryInstruction,
@@ -78,16 +84,22 @@ import {
   parseRefundExpiredInstruction,
   parseServerStartMatchInstruction,
   parseSubmitResultInstruction,
+  type AdminAcceptAdminAsyncInput,
   type AdminInitializeConfigAsyncInput,
+  type AdminProposeAdminAsyncInput,
   type AdminRegisterServerAsyncInput,
+  type AdminSetDisputeAuthorityAsyncInput,
   type AdminSetPausedAsyncInput,
   type AdminSetServerActiveAsyncInput,
   type AdminSetTreasuryAsyncInput,
   type AdminUpdateConfigAsyncInput,
   type AdminWithdrawFeesAsyncInput,
   type ClaimPayoutAsyncInput,
+  type ParsedAdminAcceptAdminInstruction,
   type ParsedAdminInitializeConfigInstruction,
+  type ParsedAdminProposeAdminInstruction,
   type ParsedAdminRegisterServerInstruction,
+  type ParsedAdminSetDisputeAuthorityInstruction,
   type ParsedAdminSetPausedInstruction,
   type ParsedAdminSetServerActiveInstruction,
   type ParsedAdminSetTreasuryInstruction,
@@ -306,8 +318,11 @@ export function identifyArenachainEvent(
 }
 
 export enum ArenachainInstruction {
+  AdminAcceptAdmin,
   AdminInitializeConfig,
+  AdminProposeAdmin,
   AdminRegisterServer,
+  AdminSetDisputeAuthority,
   AdminSetPaused,
   AdminSetServerActive,
   AdminSetTreasury,
@@ -331,6 +346,17 @@ export function identifyArenachainInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([12, 121, 139, 90, 143, 1, 67, 60]),
+      ),
+      0,
+    )
+  ) {
+    return ArenachainInstruction.AdminAcceptAdmin;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([0, 219, 215, 13, 206, 65, 18, 86]),
       ),
       0,
@@ -342,12 +368,34 @@ export function identifyArenachainInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([43, 251, 91, 130, 224, 145, 86, 202]),
+      ),
+      0,
+    )
+  ) {
+    return ArenachainInstruction.AdminProposeAdmin;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([138, 73, 117, 92, 53, 91, 51, 218]),
       ),
       0,
     )
   ) {
     return ArenachainInstruction.AdminRegisterServer;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([175, 63, 234, 168, 153, 113, 139, 94]),
+      ),
+      0,
+    )
+  ) {
+    return ArenachainInstruction.AdminSetDisputeAuthority;
   }
   if (
     containsBytes(
@@ -502,11 +550,20 @@ export type ParsedArenachainInstruction<
   TProgram extends string = "HzNHCFVGQu9SKEeAo1UPLV5itD7TSYGoVtmYz4MJeKsw",
 > =
   | ({
+      instructionType: ArenachainInstruction.AdminAcceptAdmin;
+    } & ParsedAdminAcceptAdminInstruction<TProgram>)
+  | ({
       instructionType: ArenachainInstruction.AdminInitializeConfig;
     } & ParsedAdminInitializeConfigInstruction<TProgram>)
   | ({
+      instructionType: ArenachainInstruction.AdminProposeAdmin;
+    } & ParsedAdminProposeAdminInstruction<TProgram>)
+  | ({
       instructionType: ArenachainInstruction.AdminRegisterServer;
     } & ParsedAdminRegisterServerInstruction<TProgram>)
+  | ({
+      instructionType: ArenachainInstruction.AdminSetDisputeAuthority;
+    } & ParsedAdminSetDisputeAuthorityInstruction<TProgram>)
   | ({
       instructionType: ArenachainInstruction.AdminSetPaused;
     } & ParsedAdminSetPausedInstruction<TProgram>)
@@ -552,6 +609,13 @@ export function parseArenachainInstruction<TProgram extends string>(
 ): ParsedArenachainInstruction<TProgram> {
   const instructionType = identifyArenachainInstruction(instruction);
   switch (instructionType) {
+    case ArenachainInstruction.AdminAcceptAdmin: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: ArenachainInstruction.AdminAcceptAdmin,
+        ...parseAdminAcceptAdminInstruction(instruction),
+      };
+    }
     case ArenachainInstruction.AdminInitializeConfig: {
       assertIsInstructionWithAccounts(instruction);
       return {
@@ -559,11 +623,25 @@ export function parseArenachainInstruction<TProgram extends string>(
         ...parseAdminInitializeConfigInstruction(instruction),
       };
     }
+    case ArenachainInstruction.AdminProposeAdmin: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: ArenachainInstruction.AdminProposeAdmin,
+        ...parseAdminProposeAdminInstruction(instruction),
+      };
+    }
     case ArenachainInstruction.AdminRegisterServer: {
       assertIsInstructionWithAccounts(instruction);
       return {
         instructionType: ArenachainInstruction.AdminRegisterServer,
         ...parseAdminRegisterServerInstruction(instruction),
+      };
+    }
+    case ArenachainInstruction.AdminSetDisputeAuthority: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: ArenachainInstruction.AdminSetDisputeAuthority,
+        ...parseAdminSetDisputeAuthorityInstruction(instruction),
       };
     }
     case ArenachainInstruction.AdminSetPaused: {
@@ -689,13 +767,25 @@ export type ArenachainPluginAccounts = {
 };
 
 export type ArenachainPluginInstructions = {
+  adminAcceptAdmin: (
+    input: AdminAcceptAdminAsyncInput,
+  ) => ReturnType<typeof getAdminAcceptAdminInstructionAsync> &
+    SelfPlanAndSendFunctions;
   adminInitializeConfig: (
     input: AdminInitializeConfigAsyncInput,
   ) => ReturnType<typeof getAdminInitializeConfigInstructionAsync> &
     SelfPlanAndSendFunctions;
+  adminProposeAdmin: (
+    input: AdminProposeAdminAsyncInput,
+  ) => ReturnType<typeof getAdminProposeAdminInstructionAsync> &
+    SelfPlanAndSendFunctions;
   adminRegisterServer: (
     input: AdminRegisterServerAsyncInput,
   ) => ReturnType<typeof getAdminRegisterServerInstructionAsync> &
+    SelfPlanAndSendFunctions;
+  adminSetDisputeAuthority: (
+    input: AdminSetDisputeAuthorityAsyncInput,
+  ) => ReturnType<typeof getAdminSetDisputeAuthorityInstructionAsync> &
     SelfPlanAndSendFunctions;
   adminSetPaused: (
     input: AdminSetPausedAsyncInput,
@@ -782,15 +872,30 @@ export function arenachainProgram() {
           playerProfile: addSelfFetchFunctions(client, getPlayerProfileCodec()),
         },
         instructions: {
+          adminAcceptAdmin: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getAdminAcceptAdminInstructionAsync(input),
+            ),
           adminInitializeConfig: (input) =>
             addSelfPlanAndSendFunctions(
               client,
               getAdminInitializeConfigInstructionAsync(input),
             ),
+          adminProposeAdmin: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getAdminProposeAdminInstructionAsync(input),
+            ),
           adminRegisterServer: (input) =>
             addSelfPlanAndSendFunctions(
               client,
               getAdminRegisterServerInstructionAsync(input),
+            ),
+          adminSetDisputeAuthority: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getAdminSetDisputeAuthorityInstructionAsync(input),
             ),
           adminSetPaused: (input) =>
             addSelfPlanAndSendFunctions(

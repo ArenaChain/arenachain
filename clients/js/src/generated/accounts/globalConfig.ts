@@ -57,6 +57,8 @@ export type GlobalConfig = {
   discriminator: ReadonlyUint8Array;
   /** Team multisig. */
   admin: Address;
+  /** Proposed next admin; `Pubkey::default()` when no handover is pending. */
+  pendingAdmin: Address;
   /** Can freeze held payouts (used from a later step; never moves funds). */
   disputeAuthority: Address;
   /** Test-USDC mint (classic SPL Token). Fixed at initialization. */
@@ -79,6 +81,8 @@ export type GlobalConfig = {
 export type GlobalConfigArgs = {
   /** Team multisig. */
   admin: Address;
+  /** Proposed next admin; `Pubkey::default()` when no handover is pending. */
+  pendingAdmin: Address;
   /** Can freeze held payouts (used from a later step; never moves funds). */
   disputeAuthority: Address;
   /** Test-USDC mint (classic SPL Token). Fixed at initialization. */
@@ -104,6 +108,7 @@ export function getGlobalConfigEncoder(): FixedSizeEncoder<GlobalConfigArgs> {
     getStructEncoder([
       ["discriminator", fixEncoderSize(getBytesEncoder(), 8)],
       ["admin", getAddressEncoder()],
+      ["pendingAdmin", getAddressEncoder()],
       ["disputeAuthority", getAddressEncoder()],
       ["usdcMint", getAddressEncoder()],
       ["feeVault", getAddressEncoder()],
@@ -124,6 +129,7 @@ export function getGlobalConfigDecoder(): FixedSizeDecoder<GlobalConfig> {
   return getStructDecoder([
     ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
     ["admin", getAddressDecoder()],
+    ["pendingAdmin", getAddressDecoder()],
     ["disputeAuthority", getAddressDecoder()],
     ["usdcMint", getAddressDecoder()],
     ["feeVault", getAddressDecoder()],
@@ -199,5 +205,5 @@ export async function fetchAllMaybeGlobalConfig(
 }
 
 export function getGlobalConfigSize(): number {
-  return 195;
+  return 227;
 }

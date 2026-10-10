@@ -64,5 +64,5 @@ Security details for the program, the result service and the frontend are in `.c
 - Every instruction ships with tests: the happy path plus wrong signer, wrong server key, replayed result, double settle, refund after payout, wrong mint or vault, and arithmetic edge cases.
 - Regenerate Codama clients after every program change.
 - Never commit keypairs, `.env` files or private keys. Keep the program keypair (`target/deploy/*-keypair.json`) out of git and back it up privately.
-- Upgrade authority belongs to the team multisig. Never deploy to mainnet.
+- Upgrade authority belongs to the team multisig. Never deploy to mainnet. Hand the Config admin to the multisig with `admin_propose_admin` then `admin_accept_admin` (signed by the multisig); rotate the dispute authority with `admin_set_dispute_authority`.
 - Before submission, run `/claude-security` on the whole repo and fix or document every finding.

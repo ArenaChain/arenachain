@@ -57,6 +57,7 @@ pub fn handle_admin_initialize_config(
     require_keys_neq!(treasury, Pubkey::default(), ArenaError::InvalidConfigParam);
     let config = &mut ctx.accounts.config;
     config.admin = admin;
+    config.pending_admin = Pubkey::default();
     config.dispute_authority = dispute_authority;
     config.usdc_mint = ctx.accounts.usdc_mint.key();
     config.fee_vault = ctx.accounts.fee_vault.key();

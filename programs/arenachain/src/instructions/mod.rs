@@ -1,3 +1,4 @@
+pub mod admin_handover;
 pub mod admin_initialize_config;
 pub mod admin_register_server;
 pub mod admin_update_config;
@@ -11,6 +12,7 @@ pub mod refund_expired;
 pub mod server_start_match;
 pub mod submit_result;
 
+pub use admin_handover::*;
 pub use admin_initialize_config::*;
 pub use admin_register_server::*;
 pub use admin_update_config::*;

@@ -6,8 +6,11 @@
  * @see https://github.com/codama-idl/codama
  */
 
+export * from "./adminAcceptAdmin";
 export * from "./adminInitializeConfig";
+export * from "./adminProposeAdmin";
 export * from "./adminRegisterServer";
+export * from "./adminSetDisputeAuthority";
 export * from "./adminSetPaused";
 export * from "./adminSetServerActive";
 export * from "./adminSetTreasury";

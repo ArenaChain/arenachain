@@ -183,3 +183,129 @@ fn m2_initialize_rejects_freezable_or_wrong_decimal_mint() {
     env.mint = env.create_mint_with(6, None);
     env.init_config(&admin, default_params()).unwrap();
 }
+
+// ======================= M4: two-step admin handover, dispute authority rotation =======================
+
+fn propose_admin_ix(
+    admin: &Pubkey,
+    new_admin: Pubkey,
+) -> anchor_lang::solana_program::instruction::Instruction {
+    ix(
+        arenachain::instruction::AdminProposeAdmin { new_admin },
+        arenachain::accounts::AdminUpdateConfig {
+            admin: *admin,
+            config: config_pda(),
+        },
+    )
+}
+
+fn accept_admin_ix(new_admin: &Pubkey) -> anchor_lang::solana_program::instruction::Instruction {
+    ix(
+        arenachain::instruction::AdminAcceptAdmin {},
+        arenachain::accounts::AdminAcceptAdmin {
+            new_admin: *new_admin,
+            config: config_pda(),
+        },
+    )
+}
+
+fn set_dispute_ix(
+    admin: &Pubkey,
+    new_authority: Pubkey,
+) -> anchor_lang::solana_program::instruction::Instruction {
+    ix(
+        arenachain::instruction::AdminSetDisputeAuthority { new_authority },
+        arenachain::accounts::AdminUpdateConfig {
+            admin: *admin,
+            config: config_pda(),
+        },
+    )
+}
+
+#[test]
+fn m4_admin_handover_two_step() {
+    use arenachain::errors::ArenaError;
+    let mut env = Env::new();
+    let old = env.admin.insecure_clone();
+    let new = env.wallet();
+    let attacker = env.wallet();
+
+    // Only the admin can propose.
+    let i = propose_admin_ix(&attacker.pubkey(), attacker.pubkey());
+    assert_code(env.send(&[i], &[&attacker]), code(ArenaError::Unauthorized));
+
+    // Nothing pending: nobody can accept.
+    let i = accept_admin_ix(&new.pubkey());
+    assert_code(env.send(&[i], &[&new]), code(ArenaError::Unauthorized));
+
+    let i = propose_admin_ix(&old.pubkey(), new.pubkey());
+    env.send(&[i], &[&old]).unwrap();
+    assert_eq!(env.config().pending_admin, new.pubkey());
+    // Still the old admin until accepted.
+    env.set_paused_as(&old, true).unwrap();
+    assert_code(
+        env.set_paused_as(&new, false),
+        code(ArenaError::Unauthorized),
+    );
+
+    // Wrong signer can't accept.
+    let i = accept_admin_ix(&attacker.pubkey());
+    assert_code(env.send(&[i], &[&attacker]), code(ArenaError::Unauthorized));
+
+    let i = accept_admin_ix(&new.pubkey());
+    env.send(&[i], &[&new]).unwrap();
+    let c = env.config();
+    assert_eq!(
+        (c.admin, c.pending_admin),
+        (new.pubkey(), Pubkey::default())
+    );
+    assert_code(
+        env.set_paused_as(&old, false),
+        code(ArenaError::Unauthorized),
+    );
+    env.set_paused_as(&new, false).unwrap();
+
+    // Accepting again does nothing useful: pending is cleared.
+    let i = accept_admin_ix(&new.pubkey());
+    assert_code(env.send(&[i], &[&new]), code(ArenaError::Unauthorized));
+}
+
+#[test]
+fn m4_proposing_default_cancels_handover() {
+    use arenachain::errors::ArenaError;
+    let mut env = Env::new();
+    let admin = env.admin.insecure_clone();
+    let new = env.wallet();
+    env.send(
+        &[propose_admin_ix(&admin.pubkey(), new.pubkey())],
+        &[&admin],
+    )
+    .unwrap();
+    env.send(
+        &[propose_admin_ix(&admin.pubkey(), Pubkey::default())],
+        &[&admin],
+    )
+    .unwrap();
+    let i = accept_admin_ix(&new.pubkey());
+    assert_code(env.send(&[i], &[&new]), code(ArenaError::Unauthorized));
+    assert_eq!(env.config().admin, admin.pubkey());
+}
+
+#[test]
+fn m4_set_dispute_authority_admin_only() {
+    use arenachain::errors::ArenaError;
+    let mut env = Env::new();
+    let admin = env.admin.insecure_clone();
+    let attacker = env.wallet();
+    let i = set_dispute_ix(&attacker.pubkey(), attacker.pubkey());
+    assert_code(env.send(&[i], &[&attacker]), code(ArenaError::Unauthorized));
+    let i = set_dispute_ix(&admin.pubkey(), Pubkey::default());
+    assert_code(
+        env.send(&[i], &[&admin]),
+        code(ArenaError::InvalidConfigParam),
+    );
+    let next = Pubkey::new_unique();
+    env.send(&[set_dispute_ix(&admin.pubkey(), next)], &[&admin])
+        .unwrap();
+    assert_eq!(env.config().dispute_authority, next);
+}

@@ -5,6 +5,8 @@ use anchor_lang::prelude::*;
 pub struct GlobalConfig {
     /// Team multisig.
     pub admin: Pubkey,
+    /// Proposed next admin; `Pubkey::default()` when no handover is pending.
+    pub pending_admin: Pubkey,
     /// Can freeze held payouts (used from a later step; never moves funds).
     pub dispute_authority: Pubkey,
     /// Test-USDC mint (classic SPL Token). Fixed at initialization.

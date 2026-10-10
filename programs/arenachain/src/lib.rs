@@ -35,6 +35,21 @@ pub mod arenachain {
         )
     }
 
+    pub fn admin_propose_admin(ctx: Context<AdminUpdateConfig>, new_admin: Pubkey) -> Result<()> {
+        instructions::admin_handover::handle_admin_propose_admin(ctx, new_admin)
+    }
+
+    pub fn admin_accept_admin(ctx: Context<AdminAcceptAdmin>) -> Result<()> {
+        instructions::admin_handover::handle_admin_accept_admin(ctx)
+    }
+
+    pub fn admin_set_dispute_authority(
+        ctx: Context<AdminUpdateConfig>,
+        new_authority: Pubkey,
+    ) -> Result<()> {
+        instructions::admin_handover::handle_admin_set_dispute_authority(ctx, new_authority)
+    }
+
     pub fn admin_set_treasury(ctx: Context<AdminUpdateConfig>, new_treasury: Pubkey) -> Result<()> {
         instructions::admin_update_config::handle_admin_set_treasury(ctx, new_treasury)
     }
