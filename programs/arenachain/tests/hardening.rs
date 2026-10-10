@@ -568,3 +568,119 @@ fn extra_refund_survives_assigned_wallet_and_closed_token_account() {
     assert_eq!(env.balance(&ata), ENTRY);
     assert_eq!(env.balance(&f.b.token), b0 + ENTRY);
 }
+
+// ======================= T1: claim_payout account substitution =======================
+
+#[test]
+fn t1_claim_rejects_substituted_accounts() {
+    use anchor_lang::error::ErrorCode as AnchorError;
+    let mut env = Env::new();
+    let f = env.fixture(HOLD_THRESHOLD, true);
+    env.submit_signed(&f, ResultKind::Win, f.b.key()).unwrap();
+    env.advance(HOLD_SECS);
+    let attacker = env.wallet();
+    let attacker_token = env.usdc(&attacker.pubkey(), 0);
+    let fee0 = env.balance(&fee_vault_pda());
+    // ClaimPayout accounts: config, arena_match, mint, vault, winner_token, fee_vault, player_a, token_program.
+    let cases: [(usize, Pubkey, u32); 5] = [
+        (5, attacker_token, AnchorError::ConstraintHasOne.into()), // steal the fee
+        (4, attacker_token, AnchorError::ConstraintTokenOwner.into()), // steal the payout
+        (
+            3,
+            env.usdc(&f.a.key(), HOLD_THRESHOLD * 2),
+            AnchorError::ConstraintSeeds.into(),
+        ),
+        (2, env.create_mint(), AnchorError::ConstraintHasOne.into()),
+        (6, attacker.pubkey(), AnchorError::ConstraintAddress.into()), // vault rent
+    ];
+    for (idx, key, err) in cases {
+        let mut i = env.claim_ix(&f.m, &f.b.token, &f.a.key());
+        i.accounts[idx].pubkey = key;
+        assert_code(env.send(&[i], &[&attacker]), err);
+    }
+    assert_eq!(env.balance(&attacker_token), 0);
+    assert_eq!(env.balance(&fee_vault_pda()), fee0);
+    let b_token = f.b.token;
+    env.claim(&f, &b_token).unwrap();
+}
+
+// ======================= T3: join pays only from the joiner's own account =======================
+
+#[test]
+fn t3_join_rejects_foreign_or_wrong_mint_token_account() {
+    use anchor_lang::error::ErrorCode as AnchorError;
+    let mut env = Env::new();
+    let a = env.player(ENTRY);
+    let b = env.player(ENTRY);
+    let victim = env.player(ENTRY * 5);
+    env.create_match(&a, 1, ENTRY).unwrap();
+    let m = match_pda(&a.key(), 1);
+
+    // The victim approved B as a delegate, so the token program alone would allow the transfer.
+    let approve = spl_token_interface::instruction::approve(
+        &token_program(),
+        &victim.token,
+        &b.key(),
+        &victim.key(),
+        &[],
+        ENTRY * 5,
+    )
+    .unwrap();
+    env.send(&[approve], &[&victim.kp]).unwrap();
+    // PlayerJoinMatch accounts: joiner, config, profile, match, game_server, mint, vault, joiner_token, ...
+    let mut i = env.join_match_ix(&b.key(), &b.token, &m);
+    i.accounts[7].pubkey = victim.token;
+    assert_code(
+        env.send(&[i], &[&b.kp]),
+        AnchorError::ConstraintTokenOwner.into(),
+    );
+    assert_eq!(env.balance(&victim.token), ENTRY * 5);
+
+    let other_mint = env.create_mint();
+    let wrong = env.token_account(&other_mint, &b.key(), ENTRY);
+    let mut i = env.join_match_ix(&b.key(), &b.token, &m);
+    i.accounts[7].pubkey = wrong;
+    assert_code(
+        env.send(&[i], &[&b.kp]),
+        AnchorError::ConstraintTokenMint.into(),
+    );
+}
+
+// ======================= T5: Ed25519 offsets into another instruction (Wormhole-style) =======================
+
+#[test]
+fn t5_signature_borrowed_from_another_instruction_rejected() {
+    // ix0: a genuine, valid Ed25519 check of a ROGUE key over a rogue message.
+    // ix1: an Ed25519 instruction whose index fields point at ix0 (so the precompile verifies
+    //      ix0's bytes and passes), while its own data holds the SERVER key and the expected
+    //      message at the same offsets. A program that read ix1's bytes without checking the
+    //      index fields would accept a result the server never signed.
+    let mut env = Env::new();
+    let f = env.fixture(ENTRY, true);
+    let rogue = solana_keypair::Keypair::new();
+    let demo = [9u8; 32];
+    let expected = env.result_message(&f.m, ResultKind::Win, &f.b.key(), &demo);
+    let genuine = ed25519_ix(&rogue, &expected);
+
+    let mut forged = genuine.clone();
+    // Index fields -> instruction 0.
+    for at in [4usize, 8, 14] {
+        forged.data[at..at + 2].copy_from_slice(&0u16.to_le_bytes());
+    }
+    // Same offsets (pubkey at 16, signature at 48, message at 112), but the server's key.
+    forged.data[16..48].copy_from_slice(env.server.pubkey().as_ref());
+    forged.data[48..112].fill(0);
+
+    let s = env.submit_accounts(&f);
+    let ixs = [
+        genuine,
+        forged,
+        env.submit_ix(&s, ResultKind::Win, f.b.key(), demo),
+    ];
+    let relayer = env.wallet();
+    assert_code(
+        env.send(&ixs, &[&relayer]),
+        code(arenachain::errors::ArenaError::MalformedEd25519Instruction),
+    );
+    assert_eq!(env.get_match(&f.m).status, MatchStatus::InProgress);
+}
