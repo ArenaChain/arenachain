@@ -124,12 +124,9 @@ import {
 import {
   findArenaMatchPda,
   findConfigPda,
-  findCreatorProfilePda,
   findFeeVaultPda,
   findGameServerPda,
-  findJoinerProfilePda,
   findProfilePda,
-  findServerStartMatchGameServerPda,
   findVaultPda,
 } from "../pdas";
 
@@ -846,11 +843,8 @@ export type ArenachainPluginPdas = {
   feeVault: typeof findFeeVaultPda;
   gameServer: typeof findGameServerPda;
   vault: typeof findVaultPda;
-  creatorProfile: typeof findCreatorProfilePda;
   arenaMatch: typeof findArenaMatchPda;
   profile: typeof findProfilePda;
-  joinerProfile: typeof findJoinerProfilePda;
-  serverStartMatchGameServer: typeof findServerStartMatchGameServerPda;
 };
 
 export type ArenachainPluginRequirements = ClientWithRpc<
@@ -968,11 +962,8 @@ export function arenachainProgram() {
           feeVault: findFeeVaultPda,
           gameServer: findGameServerPda,
           vault: findVaultPda,
-          creatorProfile: findCreatorProfilePda,
           arenaMatch: findArenaMatchPda,
           profile: findProfilePda,
-          joinerProfile: findJoinerProfilePda,
-          serverStartMatchGameServer: findServerStartMatchGameServerPda,
         },
         identifyAccount: identifyArenachainAccount,
         identifyInstruction: identifyArenachainInstruction,

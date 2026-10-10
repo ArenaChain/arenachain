@@ -8,10 +8,7 @@
 
 export * from "./arenaMatch";
 export * from "./config";
-export * from "./creatorProfile";
 export * from "./feeVault";
 export * from "./gameServer";
-export * from "./joinerProfile";
 export * from "./profile";
-export * from "./serverStartMatchGameServer";
 export * from "./vault";

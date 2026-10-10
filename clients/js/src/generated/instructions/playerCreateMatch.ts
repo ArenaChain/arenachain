@@ -46,7 +46,7 @@ import {
 import {
   findArenaMatchPda,
   findConfigPda,
-  findCreatorProfilePda,
+  findProfilePda,
   findVaultPda,
 } from "../pdas";
 import { ARENACHAIN_PROGRAM_ADDRESS } from "../programs";
@@ -311,9 +311,9 @@ export async function getPlayerCreateMatchInstructionAsync<
     accounts.config.value = await findConfigPda({ programAddress });
   }
   if (!accounts.creatorProfile.value) {
-    accounts.creatorProfile.value = await findCreatorProfilePda(
+    accounts.creatorProfile.value = await findProfilePda(
       {
-        creator: getAddressFromResolvedInstructionAccount(
+        authority: getAddressFromResolvedInstructionAccount(
           "creator",
           accounts.creator.value,
         ),

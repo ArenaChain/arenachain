@@ -17,7 +17,8 @@ pub fn split_pool(pool: u64, kind: ResultKind) -> Result<(u64, u64)> {
             u64::try_from(fee).map_err(|_| error!(ArenaError::MathOverflow))?
         }
         ResultKind::Forfeit => 0,
-        ResultKind::Void => return err!(ArenaError::InvalidWinner),
+        // Void refunds both players; it never reaches a winner split.
+        ResultKind::Void => return err!(ArenaError::InvalidMatchStatus),
     };
     let payout = pool
         .checked_sub(fee)
@@ -92,6 +93,7 @@ mod tests {
 
     #[test]
     fn void_has_no_winner_split() {
-        assert!(split_pool(1_000, ResultKind::Void).is_err());
+        let err = split_pool(1_000, ResultKind::Void).unwrap_err();
+        assert_eq!(err, ArenaError::InvalidMatchStatus.into());
     }
 }

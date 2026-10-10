@@ -40,7 +40,7 @@ import {
   type ResolvedInstructionAccount,
   type ResolvedInstructionAccountMeta,
 } from "@solana/program-client-core";
-import { findConfigPda, findJoinerProfilePda, findVaultPda } from "../pdas";
+import { findConfigPda, findProfilePda, findVaultPda } from "../pdas";
 import { ARENACHAIN_PROGRAM_ADDRESS } from "../programs";
 
 export const PLAYER_JOIN_MATCH_DISCRIMINATOR: ReadonlyUint8Array =
@@ -268,9 +268,9 @@ export async function getPlayerJoinMatchInstructionAsync<
     accounts.config.value = await findConfigPda({ programAddress });
   }
   if (!accounts.joinerProfile.value) {
-    accounts.joinerProfile.value = await findJoinerProfilePda(
+    accounts.joinerProfile.value = await findProfilePda(
       {
-        joiner: getAddressFromResolvedInstructionAccount(
+        authority: getAddressFromResolvedInstructionAccount(
           "joiner",
           accounts.joiner.value,
         ),

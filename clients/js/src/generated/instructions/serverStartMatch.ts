@@ -40,7 +40,7 @@ import {
   type ResolvedInstructionAccount,
   type ResolvedInstructionAccountMeta,
 } from "@solana/program-client-core";
-import { findConfigPda, findServerStartMatchGameServerPda } from "../pdas";
+import { findConfigPda, findGameServerPda } from "../pdas";
 import { ARENACHAIN_PROGRAM_ADDRESS } from "../programs";
 
 export const SERVER_START_MATCH_DISCRIMINATOR: ReadonlyUint8Array =
@@ -191,9 +191,9 @@ export async function getServerStartMatchInstructionAsync<
     accounts.config.value = await findConfigPda({ programAddress });
   }
   if (!accounts.gameServer.value) {
-    accounts.gameServer.value = await findServerStartMatchGameServerPda(
+    accounts.gameServer.value = await findGameServerPda(
       {
-        serverSigner: getAddressFromResolvedInstructionAccount(
+        signerKey: getAddressFromResolvedInstructionAccount(
           "serverSigner",
           accounts.serverSigner.value,
         ),
