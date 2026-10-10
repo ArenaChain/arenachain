@@ -138,7 +138,7 @@ export type ClaimPayoutAsyncInput<
   vault?: TAccountVault;
   winnerToken: TAccountWinnerToken;
   feeVault: TAccountFeeVault;
-  /** Receives the vault's rent when it closes. */
+  /** owner: player A could reassign their wallet to another program to block settlement. */
   playerA: TAccountPlayerA;
   tokenProgram?: TAccountTokenProgram;
 };
@@ -331,7 +331,7 @@ export type ClaimPayoutInput<
   vault: TAccountVault;
   winnerToken: TAccountWinnerToken;
   feeVault: TAccountFeeVault;
-  /** Receives the vault's rent when it closes. */
+  /** owner: player A could reassign their wallet to another program to block settlement. */
   playerA: TAccountPlayerA;
   tokenProgram?: TAccountTokenProgram;
 };
@@ -503,7 +503,7 @@ export type ParsedClaimPayoutInstruction<
     vault: TAccountMetas[3];
     winnerToken: TAccountMetas[4];
     feeVault: TAccountMetas[5];
-    /** Receives the vault's rent when it closes. */
+    /** owner: player A could reassign their wallet to another program to block settlement. */
     playerA: TAccountMetas[6];
     tokenProgram: TAccountMetas[7];
   };

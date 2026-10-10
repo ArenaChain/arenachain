@@ -136,7 +136,7 @@ export type RefundExpiredAsyncInput<
   vault?: TAccountVault;
   playerAToken: TAccountPlayerAToken;
   playerBToken: TAccountPlayerBToken;
-  /** Receives the vault's rent when it closes. */
+  /** owner: player A could reassign their wallet to another program to block settlement. */
   playerA: TAccountPlayerA;
   tokenProgram?: TAccountTokenProgram;
 };
@@ -314,7 +314,7 @@ export type RefundExpiredInput<
   vault: TAccountVault;
   playerAToken: TAccountPlayerAToken;
   playerBToken: TAccountPlayerBToken;
-  /** Receives the vault's rent when it closes. */
+  /** owner: player A could reassign their wallet to another program to block settlement. */
   playerA: TAccountPlayerA;
   tokenProgram?: TAccountTokenProgram;
 };
@@ -473,7 +473,7 @@ export type ParsedRefundExpiredInstruction<
     vault: TAccountMetas[2];
     playerAToken: TAccountMetas[3];
     playerBToken: TAccountMetas[4];
-    /** Receives the vault's rent when it closes. */
+    /** owner: player A could reassign their wallet to another program to block settlement. */
     playerA: TAccountMetas[5];
     tokenProgram: TAccountMetas[6];
   };

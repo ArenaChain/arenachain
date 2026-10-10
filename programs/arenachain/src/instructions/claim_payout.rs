@@ -44,9 +44,10 @@ pub struct ClaimPayout<'info> {
     pub winner_token: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub fee_vault: Box<Account<'info, TokenAccount>>,
-    /// Receives the vault's rent when it closes.
+    /// CHECK: receives the vault's rent when it closes. Only the address is checked, not the
+    /// owner: player A could reassign their wallet to another program to block settlement.
     #[account(mut, address = arena_match.player_a)]
-    pub player_a: SystemAccount<'info>,
+    pub player_a: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
 }
 

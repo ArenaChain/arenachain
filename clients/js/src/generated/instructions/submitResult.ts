@@ -198,7 +198,7 @@ export type SubmitResultAsyncInput<
   playerAProfile: TAccountPlayerAProfile;
   playerBProfile: TAccountPlayerBProfile;
   feeVault: TAccountFeeVault;
-  /** Receives the vault's rent when it closes. */
+  /** owner: player A could reassign their wallet to another program to block settlement. */
   playerA: TAccountPlayerA;
   instructionsSysvar?: TAccountInstructionsSysvar;
   tokenProgram?: TAccountTokenProgram;
@@ -498,7 +498,7 @@ export type SubmitResultInput<
   playerAProfile: TAccountPlayerAProfile;
   playerBProfile: TAccountPlayerBProfile;
   feeVault: TAccountFeeVault;
-  /** Receives the vault's rent when it closes. */
+  /** owner: player A could reassign their wallet to another program to block settlement. */
   playerA: TAccountPlayerA;
   instructionsSysvar?: TAccountInstructionsSysvar;
   tokenProgram?: TAccountTokenProgram;
@@ -767,7 +767,7 @@ export type ParsedSubmitResultInstruction<
     playerAProfile: TAccountMetas[7];
     playerBProfile: TAccountMetas[8];
     feeVault: TAccountMetas[9];
-    /** Receives the vault's rent when it closes. */
+    /** owner: player A could reassign their wallet to another program to block settlement. */
     playerA: TAccountMetas[10];
     instructionsSysvar: TAccountMetas[11];
     tokenProgram: TAccountMetas[12];

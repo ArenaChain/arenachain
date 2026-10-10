@@ -71,9 +71,10 @@ pub struct SubmitResult<'info> {
     pub player_b_profile: Box<Account<'info, PlayerProfile>>,
     #[account(mut)]
     pub fee_vault: Box<Account<'info, TokenAccount>>,
-    /// Receives the vault's rent when it closes.
+    /// CHECK: receives the vault's rent when it closes. Only the address is checked, not the
+    /// owner: player A could reassign their wallet to another program to block settlement.
     #[account(mut, address = arena_match.player_a)]
-    pub player_a: SystemAccount<'info>,
+    pub player_a: UncheckedAccount<'info>,
     /// CHECK: address-checked; read only through the `_checked` sysvar loaders.
     #[account(address = solana_sdk_ids::sysvar::instructions::ID)]
     pub instructions_sysvar: UncheckedAccount<'info>,

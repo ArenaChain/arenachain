@@ -47,9 +47,10 @@ pub struct RefundExpired<'info> {
         token::token_program = token_program,
     )]
     pub player_b_token: Box<Account<'info, TokenAccount>>,
-    /// Receives the vault's rent when it closes.
+    /// CHECK: receives the vault's rent when it closes. Only the address is checked, not the
+    /// owner: player A could reassign their wallet to another program to block settlement.
     #[account(mut, address = arena_match.player_a)]
-    pub player_a: SystemAccount<'info>,
+    pub player_a: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
 }
 
