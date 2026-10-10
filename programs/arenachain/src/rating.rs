@@ -199,6 +199,22 @@ mod tests {
     }
 
     #[test]
+    fn forfeit_exactly_thirty_days_later_starts_a_new_window() {
+        let mut p = profile(1000);
+        apply_forfeit_penalty(&mut p, DAY);
+        apply_forfeit_penalty(&mut p, DAY + FORFEIT_WINDOW_SECS);
+        assert_eq!(
+            p.banned_until, 0,
+            "a forfeit 30 days old is outside the window"
+        );
+        apply_forfeit_penalty(&mut p, DAY + FORFEIT_WINDOW_SECS + 1);
+        assert_eq!(
+            p.banned_until,
+            DAY + FORFEIT_WINDOW_SECS + 1 + SECOND_FORFEIT_BAN_SECS
+        );
+    }
+
+    #[test]
     fn ban_never_shortens() {
         let mut p = profile(1000);
         p.banned_until = 1_000 * DAY;

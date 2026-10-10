@@ -696,3 +696,161 @@ fn t5_signature_borrowed_from_another_instruction_rejected() {
     );
     assert_eq!(env.get_match(&f.m).status, MatchStatus::InProgress);
 }
+
+// ======================= T4: Ed25519 defense-in-depth checks =======================
+
+#[test]
+fn t4_ed25519_with_account_metas_rejected() {
+    let mut env = Env::new();
+    let f = env.fixture(ENTRY, true);
+    let demo = [9u8; 32];
+    let msg = env.result_message(&f.m, ResultKind::Win, &f.b.key(), &demo);
+    let server = env.server.insecure_clone();
+    let mut sig = ed25519_ix(&server, &msg);
+    sig.accounts.push(
+        anchor_lang::solana_program::instruction::AccountMeta::new_readonly(
+            Pubkey::new_unique(),
+            false,
+        ),
+    );
+    let s = env.submit_accounts(&f);
+    let ixs = [sig, env.submit_ix(&s, ResultKind::Win, f.b.key(), demo)];
+    assert_code(
+        env.send(&ixs, &[&f.b.kp]),
+        code(arenachain::errors::ArenaError::MalformedEd25519Instruction),
+    );
+}
+
+#[test]
+fn t4_signed_message_with_trailing_byte_rejected() {
+    let mut env = Env::new();
+    let f = env.fixture(ENTRY, true);
+    let demo = [9u8; 32];
+    let mut msg = env.result_message(&f.m, ResultKind::Win, &f.b.key(), &demo);
+    msg.push(0); // valid signature over 158 bytes, canonical prefix intact
+    let server = env.server.insecure_clone();
+    let s = env.submit_accounts(&f);
+    let ixs = [
+        ed25519_ix(&server, &msg),
+        env.submit_ix(&s, ResultKind::Win, f.b.key(), demo),
+    ];
+    assert_code(
+        env.send(&ixs, &[&f.b.kp]),
+        code(arenachain::errors::ArenaError::ResultMessageMismatch),
+    );
+}
+
+// ======================= T7: the fee vault is never an escrow source =======================
+
+#[test]
+fn t7_fee_vault_cannot_stand_in_for_a_match_vault() {
+    use anchor_lang::error::ErrorCode as AnchorError;
+    let seeds: u32 = AnchorError::ConstraintSeeds.into();
+    let mut env = Env::new();
+    // Put fees in the vault first, so a drain would be visible.
+    let paid = env.fixture(ENTRY, true);
+    env.submit_signed(&paid, ResultKind::Win, paid.a.key())
+        .unwrap();
+    let fees = env.balance(&fee_vault_pda());
+    assert!(fees > 0);
+    let fv = fee_vault_pda();
+    let attacker = env.wallet();
+
+    // cancel (Open match): vault is account 3.
+    let a = env.player(ENTRY);
+    env.create_match(&a, 9, ENTRY).unwrap();
+    let open = match_pda(&a.key(), 9);
+    let mut i = env.cancel_match_ix(&a.key(), &a.token, &open);
+    i.accounts[3].pubkey = fv;
+    assert_code(env.send(&[i], &[&a.kp]), seeds);
+
+    // submit_result (live match).
+    let live = {
+        let x = env.player(ENTRY * 3);
+        let y = env.player(ENTRY * 3);
+        env.create_match(&x, 1, ENTRY).unwrap();
+        let m = match_pda(&x.key(), 1);
+        env.join_match(&y, &m).unwrap();
+        env.start_match(&m).unwrap();
+        Fixture { a: x, b: y, m }
+    };
+    let demo = [9u8; 32];
+    let msg = env.result_message(&live.m, ResultKind::Void, &Pubkey::default(), &demo);
+    let server = env.server.insecure_clone();
+    let mut s = env.submit_accounts(&live);
+    s.vault = fv;
+    let ixs = [
+        ed25519_ix(&server, &msg),
+        env.submit_ix(&s, ResultKind::Void, Pubkey::default(), demo),
+    ];
+    // submit_result already takes the fee vault as its own writable account, so Anchor rejects
+    // the duplicate before any constraint runs.
+    assert_code(
+        env.send(&ixs, &[&attacker]),
+        AnchorError::ConstraintDuplicateMutableAccount.into(),
+    );
+
+    // refund_expired: vault is account 2.
+    env.advance(RESULT_WINDOW_SECS + 1);
+    let mut i = env.refund_expired_ix(&live);
+    i.accounts[2].pubkey = fv;
+    assert_code(env.send(&[i], &[&attacker]), seeds);
+
+    // claim_payout (held win): vault is account 3.
+    let held = {
+        let x = env.player(HOLD_THRESHOLD * 3);
+        let y = env.player(HOLD_THRESHOLD * 3);
+        env.create_match(&x, 2, HOLD_THRESHOLD).unwrap();
+        let m = match_pda(&x.key(), 2);
+        env.join_match(&y, &m).unwrap();
+        env.start_match(&m).unwrap();
+        Fixture { a: x, b: y, m }
+    };
+    env.submit_signed(&held, ResultKind::Win, held.a.key())
+        .unwrap();
+    env.advance(HOLD_SECS);
+    let mut i = env.claim_ix(&held.m, &held.a.token, &held.a.key());
+    i.accounts[3].pubkey = fv;
+    // Like submit_result, claim_payout takes the fee vault as its own writable account.
+    assert_code(
+        env.send(&[i], &[&attacker]),
+        AnchorError::ConstraintDuplicateMutableAccount.into(),
+    );
+
+    assert_eq!(env.balance(&fv), fees);
+}
+
+// ======================= T8: boundaries =======================
+
+#[test]
+fn t8_negative_hold_secs_rejected() {
+    let mut env = Env::new();
+    let admin = env.admin.insecure_clone();
+    let bad = arenachain::state::ConfigParams {
+        hold_secs: -1,
+        ..default_params()
+    };
+    assert_code(
+        env.update_config_as(&admin, bad),
+        code(arenachain::errors::ArenaError::InvalidConfigParam),
+    );
+}
+
+#[test]
+fn t8_held_forfeit_claimable_exactly_at_unlock() {
+    let mut env = Env::new();
+    let f = env.fixture(HOLD_THRESHOLD, true);
+    env.submit_signed(&f, ResultKind::Forfeit, f.a.key())
+        .unwrap();
+    let unlock = env.get_match(&f.m).unlock_at;
+    let a_token = f.a.token;
+    env.set_time(unlock - 1);
+    assert_code(
+        env.claim(&f, &a_token),
+        code(arenachain::errors::ArenaError::PayoutLocked),
+    );
+    env.set_time(unlock);
+    let a0 = env.balance(&a_token);
+    env.claim(&f, &a_token).unwrap();
+    assert_eq!(env.balance(&a_token), a0 + HOLD_THRESHOLD * 2);
+}
