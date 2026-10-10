@@ -54,7 +54,9 @@ pub fn handle_admin_initialize_config(
     params: ConfigParams,
 ) -> Result<()> {
     params.validate()?;
-    require_keys_neq!(treasury, Pubkey::default(), ArenaError::InvalidConfigParam);
+    for key in [admin, dispute_authority, treasury] {
+        require_keys_neq!(key, Pubkey::default(), ArenaError::InvalidConfigParam);
+    }
     let config = &mut ctx.accounts.config;
     config.admin = admin;
     config.pending_admin = Pubkey::default();

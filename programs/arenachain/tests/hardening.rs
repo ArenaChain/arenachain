@@ -377,3 +377,22 @@ fn l2_join_rejects_another_servers_account() {
         code(anchor_lang::error::ErrorCode::ConstraintAddress),
     );
 }
+
+// ======================= L4: init rejects a default admin or dispute authority =======================
+
+#[test]
+fn l4_initialize_rejects_default_admin_or_dispute_authority() {
+    use arenachain::errors::ArenaError;
+    let mut env = Env::bare();
+    let admin = env.admin.insecure_clone();
+    // Instruction data: discriminator(8), admin(32), dispute_authority(32), treasury(32), params.
+    for range in [8..40, 40..72] {
+        let mut i = env.init_config_ix(&admin.pubkey(), default_params());
+        i.data[range].copy_from_slice(&[0u8; 32]);
+        assert_code(
+            env.send(&[i], &[&admin]),
+            code(ArenaError::InvalidConfigParam),
+        );
+    }
+    env.init_config(&admin, default_params()).unwrap();
+}
