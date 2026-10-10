@@ -29,6 +29,7 @@ solana-sdk-ids = "3"
 [dev-dependencies]
 litesvm = { version = "0.10.0", features = ["precompiles"] }
 spl-token-interface = "2"
+spl-associated-token-account-interface = "2"
 solana-program-pack = "3"
 solana-program-option = "3"
 solana-account = "3"

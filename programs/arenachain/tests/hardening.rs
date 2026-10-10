@@ -340,6 +340,21 @@ fn l1_void_refund_allowed_while_paused() {
     );
 }
 
+#[test]
+fn l1_paused_void_still_needs_an_active_server() {
+    // Mitigation for a stolen server key during a pause: deactivating the server stops Voids too.
+    let mut env = Env::new();
+    let f = env.fixture(ENTRY, true);
+    env.set_paused(true).unwrap();
+    let key = env.server.pubkey();
+    env.set_server_active(&key, false).unwrap();
+    assert_code(
+        env.submit_signed(&f, ResultKind::Void, Pubkey::default()),
+        code(arenachain::errors::ArenaError::ServerInactive),
+    );
+    assert_eq!(env.get_match(&f.m).status, MatchStatus::InProgress);
+}
+
 // ======================= L2: join requires the match's server to be active =======================
 
 #[test]
@@ -395,4 +410,161 @@ fn l4_initialize_rejects_default_admin_or_dispute_authority() {
         );
     }
     env.init_config(&admin, default_params()).unwrap();
+}
+
+// ======================= Extra: player A abandons their token account =======================
+// Same class as C1: can player A block player B's refund by closing or giving away the token
+// account a refund would be paid into? No: anyone can recreate A's associated token account
+// (create-idempotent) in the same transaction, and the recipient check only requires
+// owner == player A and the right mint.
+
+use spl_associated_token_account_interface::{
+    address::get_associated_token_address, instruction::create_associated_token_account_idempotent,
+};
+
+enum Abandon {
+    Close,
+    GiveAway,
+}
+
+/// Player A empties and closes their token account, or hands its ownership to someone else.
+fn abandon_token_account(env: &mut Env, f: &Fixture, how: Abandon) {
+    let owner = f.a.key();
+    let tp = token_program();
+    let ixs = match how {
+        Abandon::Close => {
+            let sink = env.usdc(&Pubkey::new_unique(), 0);
+            let left = env.balance(&f.a.token);
+            vec![
+                spl_token_interface::instruction::transfer(
+                    &tp,
+                    &f.a.token,
+                    &sink,
+                    &owner,
+                    &[],
+                    left,
+                )
+                .unwrap(),
+                spl_token_interface::instruction::close_account(
+                    &tp,
+                    &f.a.token,
+                    &owner,
+                    &owner,
+                    &[],
+                )
+                .unwrap(),
+            ]
+        }
+        Abandon::GiveAway => vec![spl_token_interface::instruction::set_authority(
+            &tp,
+            &f.a.token,
+            Some(&Pubkey::new_unique()),
+            spl_token_interface::instruction::AuthorityType::AccountOwner,
+            &owner,
+            &[],
+        )
+        .unwrap()],
+    };
+    env.send(&ixs, &[&f.a.kp])
+        .expect("player A abandons their token account");
+}
+
+/// A third party recreates player A's ATA and the refund in one transaction.
+fn relayer_recreates_ata_then(
+    env: &mut Env,
+    f: &Fixture,
+    then: anchor_lang::solana_program::instruction::Instruction,
+) -> Pubkey {
+    let relayer = env.wallet();
+    let ata = get_associated_token_address(&f.a.key(), &env.mint);
+    let create = create_associated_token_account_idempotent(
+        &relayer.pubkey(),
+        &f.a.key(),
+        &env.mint,
+        &token_program(),
+    );
+    env.send(&[create, then], &[&relayer])
+        .expect("refund after ATA recreate");
+    ata
+}
+
+fn refund_with_a_token(
+    env: &Env,
+    f: &Fixture,
+    a_token: Pubkey,
+) -> anchor_lang::solana_program::instruction::Instruction {
+    let mut i = env.refund_expired_ix(f);
+    i.accounts[3].pubkey = a_token; // player_a_token
+    i
+}
+
+#[test]
+fn extra_expiry_refund_survives_closed_or_given_away_token_account() {
+    for how in [Abandon::Close, Abandon::GiveAway] {
+        let mut env = Env::new();
+        let f = env.fixture(ENTRY, true);
+        let b0 = env.balance(&f.b.token);
+        abandon_token_account(&mut env, &f, how);
+        env.advance(RESULT_WINDOW_SECS + 1);
+
+        // The original account no longer qualifies.
+        assert_failed(env.refund_expired(&f));
+
+        let ata = get_associated_token_address(&f.a.key(), &env.mint);
+        let i = refund_with_a_token(&env, &f, ata);
+        relayer_recreates_ata_then(&mut env, &f, i);
+        assert_eq!(env.balance(&ata), ENTRY);
+        assert_eq!(env.balance(&f.b.token), b0 + ENTRY);
+        assert_eq!(env.get_match(&f.m).status, MatchStatus::Refunded);
+    }
+}
+
+#[test]
+fn extra_void_refund_survives_closed_or_given_away_token_account() {
+    for how in [Abandon::Close, Abandon::GiveAway] {
+        let mut env = Env::new();
+        let f = env.fixture(ENTRY, true);
+        let b0 = env.balance(&f.b.token);
+        abandon_token_account(&mut env, &f, how);
+
+        let ata = get_associated_token_address(&f.a.key(), &env.mint);
+        let demo = [9u8; 32];
+        let msg = env.result_message(&f.m, ResultKind::Void, &Pubkey::default(), &demo);
+        let server = env.server.insecure_clone();
+        let mut s = env.submit_accounts(&f);
+        s.player_a_token = ata;
+        let relayer = env.wallet();
+        let create = create_associated_token_account_idempotent(
+            &relayer.pubkey(),
+            &f.a.key(),
+            &env.mint,
+            &token_program(),
+        );
+        // ATA create first; the Ed25519 instruction must stay directly before submit_result.
+        let ixs = [
+            create,
+            ed25519_ix(&server, &msg),
+            env.submit_ix(&s, ResultKind::Void, Pubkey::default(), demo),
+        ];
+        env.send(&ixs, &[&relayer])
+            .expect("void after ATA recreate");
+        assert_eq!(env.balance(&ata), ENTRY);
+        assert_eq!(env.balance(&f.b.token), b0 + ENTRY);
+    }
+}
+
+#[test]
+fn extra_refund_survives_assigned_wallet_and_closed_token_account() {
+    // C1 and the token-account abandonment combined.
+    let mut env = Env::new();
+    let f = env.fixture(ENTRY, true);
+    let b0 = env.balance(&f.b.token);
+    abandon_token_account(&mut env, &f, Abandon::Close);
+    assign_player_a(&mut env, &f);
+    env.advance(RESULT_WINDOW_SECS + 1);
+    let ata = get_associated_token_address(&f.a.key(), &env.mint);
+    let i = refund_with_a_token(&env, &f, ata);
+    relayer_recreates_ata_then(&mut env, &f, i);
+    assert_eq!(env.balance(&ata), ENTRY);
+    assert_eq!(env.balance(&f.b.token), b0 + ENTRY);
 }
