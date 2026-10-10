@@ -42,7 +42,7 @@ Follow the `solana-dev` skill (`.claude/skills/solana-dev`) for Solana patterns.
   - `Forfeit`: a player left a live match and didn't reconnect within 5 minutes (any stage, even when ahead), or didn't join within 15 minutes. The opponent takes the whole pool and the fee is waived.
   - `Void`: server failure that can't be restored. Both players are refunded.
 - Fee: 500 bps. `fee = pool * 500 / 10_000`, rounded down; the winner gets `pool - fee`; nothing stays in the vault.
-- Payout hold: pools at or above `hold_threshold` record the winner and an unlock time. Payout happens through `claim` after the hold unless the dispute authority freezes it, because VAC bans arrive late.
+- Payout hold: pools at or above `hold_threshold` record the winner and an unlock time. Payout happens through `claim` after the hold unless the dispute authority freezes it, because VAC bans arrive late. **The dispute freeze is post-hackathon and required before mainnet:** it isn't built yet, so today every held payout becomes claimable after the hold. Until it exists, the devnet config sets `hold_threshold` above demo pool sizes (250 USDC) so demo matches pay out directly.
 - Expiry: once a match is full, the server must start it by the start deadline (`joined_at + result_window_secs`), and a started match must settle by the result deadline (`started_at + result_window_secs`). Past the relevant deadline with nothing settled, anyone can trigger refunds to both players, so funds can never be trapped.
 - Dual confirmation: if both players sign the same winner, settle without the server.
 - Escrow only ever goes to the match's players, plus the fee to the fee vault. No admin path withdraws escrow.
@@ -51,6 +51,12 @@ Follow the `solana-dev` skill (`.claude/skills/solana-dev`) for Solana patterns.
 - Ratings: Elo with integer-only math.
 
 Security details for the program, the result service and the frontend are in `.claude/claude-security-guidance.md`. Follow them.
+
+## Known limitations (accepted for the hackathon)
+
+- Dispute freeze not built (see Payout hold): post-hackathon, required before mainnet.
+- Signed results don't name a cluster. The message binds the program ID, match address and match creation slot, so a devnet result can't replay on mainnet unless a match there had the same address and creation slot, which is practically impossible. Before any mainnet launch, add a cluster tag to the domain (e.g. `ARENACHAIN_RESULT_V1_MAINNET`) or deploy under a different program ID.
+- Match accounts are never closed, so each match keeps about 0.0028 SOL of the creator's rent. No escrow is affected.
 
 ## Result service rules
 
