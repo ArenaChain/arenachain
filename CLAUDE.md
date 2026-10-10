@@ -46,6 +46,7 @@ Follow the `solana-dev` skill (`.claude/skills/solana-dev`) for Solana patterns.
 - Expiry: once a match is full, the server must start it by the start deadline (`joined_at + result_window_secs`), and a started match must settle by the result deadline (`started_at + result_window_secs`). Past the relevant deadline with nothing settled, anyone can trigger refunds to both players, so funds can never be trapped.
 - Dual confirmation: if both players sign the same winner, settle without the server.
 - Escrow only ever goes to the match's players, plus the fee to the fee vault. No admin path withdraws escrow.
+- Admin timing is bounded so no config change can lock escrow for long: `hold_secs` ≤ 14 days, `result_window_secs` between 10 minutes and 24 hours.
 - Forfeit penalties within 30 days: reputation hit, then a 24-hour ban from paid matches, then a 7-day ban.
 - Ratings: Elo with integer-only math.
 

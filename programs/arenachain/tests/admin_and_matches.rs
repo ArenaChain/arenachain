@@ -81,7 +81,7 @@ fn admin_update_config_and_pause() {
     let p = ConfigParams {
         hold_threshold: 5,
         hold_secs: 10,
-        result_window_secs: 20,
+        result_window_secs: 600,
     };
     env.update_config_as(&admin, p).unwrap();
     assert_eq!(env.config().hold_threshold, 5);

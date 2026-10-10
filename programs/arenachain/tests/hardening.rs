@@ -113,3 +113,49 @@ fn m3_unstarted_match_expires_at_start_deadline() {
     );
     env.refund_expired(&f).unwrap();
 }
+
+// ======================= M1: timing params are bounded =======================
+
+#[test]
+fn m1_update_config_rejects_out_of_bound_timing() {
+    use arenachain::{errors::ArenaError, state::ConfigParams};
+    const DAY: i64 = 24 * 3600;
+    let mut env = Env::new();
+    let admin = env.admin.insecure_clone();
+    let with = |hold_secs: i64, result_window_secs: i64| ConfigParams {
+        hold_secs,
+        result_window_secs,
+        ..default_params()
+    };
+    for bad in [
+        with(14 * DAY + 1, 3600),
+        with(i64::MAX, 3600),
+        with(3600, 599),
+        with(3600, DAY + 1),
+        with(3600, i64::MAX),
+    ] {
+        assert_code(
+            env.update_config_as(&admin, bad),
+            code(ArenaError::InvalidConfigParam),
+        );
+    }
+    for good in [with(14 * DAY, 600), with(0, DAY)] {
+        env.update_config_as(&admin, good).unwrap();
+    }
+}
+
+#[test]
+fn m1_initialize_rejects_out_of_bound_timing() {
+    use arenachain::{errors::ArenaError, state::ConfigParams};
+    let mut env = Env::bare();
+    let admin = env.admin.insecure_clone();
+    let bad = ConfigParams {
+        hold_secs: 10i64.pow(12),
+        ..default_params()
+    };
+    assert_code(
+        env.init_config(&admin, bad),
+        code(ArenaError::InvalidConfigParam),
+    );
+    env.init_config(&admin, default_params()).unwrap();
+}

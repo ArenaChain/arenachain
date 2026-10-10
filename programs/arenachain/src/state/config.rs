@@ -33,8 +33,12 @@ pub struct ConfigParams {
 
 impl ConfigParams {
     pub fn validate(&self) -> Result<()> {
+        use crate::constants::*;
         require!(
-            self.hold_threshold > 0 && self.hold_secs >= 0 && self.result_window_secs > 0,
+            self.hold_threshold > 0
+                && (0..=MAX_HOLD_SECS).contains(&self.hold_secs)
+                && (MIN_RESULT_WINDOW_SECS..=MAX_RESULT_WINDOW_SECS)
+                    .contains(&self.result_window_secs),
             crate::errors::ArenaError::InvalidConfigParam
         );
         Ok(())

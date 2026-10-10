@@ -22,9 +22,15 @@ export const MATCH_SEED: ReadonlyUint8Array = new Uint8Array([
   109, 97, 116, 99, 104,
 ]);
 
+export const MAX_HOLD_SECS: bigint = 1209600n;
+
 export const MAX_REPUTATION: number = 100;
 
+export const MAX_RESULT_WINDOW_SECS: bigint = 86400n;
+
 export const MIN_ELO: number = 100;
+
+export const MIN_RESULT_WINDOW_SECS: bigint = 600n;
 
 export const PROFILE_SEED: ReadonlyUint8Array = new Uint8Array([
   112, 114, 111, 102, 105, 108, 101,

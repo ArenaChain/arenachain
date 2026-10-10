@@ -29,6 +29,14 @@ pub const MAX_REPUTATION: i32 = 100;
 pub const FORFEIT_REPUTATION_PENALTY: i32 = 10;
 pub const COMPLETED_MATCH_REPUTATION: i32 = 1;
 
+/// Bounds on admin-set timing, so no config change can lock escrow for long.
+#[constant]
+pub const MAX_HOLD_SECS: i64 = 14 * 24 * 3600;
+#[constant]
+pub const MIN_RESULT_WINDOW_SECS: i64 = 10 * 60;
+#[constant]
+pub const MAX_RESULT_WINDOW_SECS: i64 = 24 * 3600;
+
 pub const FORFEIT_WINDOW_SECS: i64 = 30 * 24 * 3600;
 pub const SECOND_FORFEIT_BAN_SECS: i64 = 24 * 3600;
 pub const THIRD_FORFEIT_BAN_SECS: i64 = 7 * 24 * 3600;
