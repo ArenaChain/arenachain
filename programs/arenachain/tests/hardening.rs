@@ -309,3 +309,33 @@ fn m4_set_dispute_authority_admin_only() {
         .unwrap();
     assert_eq!(env.config().dispute_authority, next);
 }
+
+// ======================= L1: server-signed Void refunds even while paused =======================
+
+#[test]
+fn l1_void_refund_allowed_while_paused() {
+    let mut env = Env::new();
+    let f = env.fixture(ENTRY, true);
+    let (a0, b0) = (env.balance(&f.a.token), env.balance(&f.b.token));
+    env.set_paused(true).unwrap();
+    env.submit_signed(&f, ResultKind::Void, Pubkey::default())
+        .unwrap();
+    assert_eq!(env.balance(&f.a.token), a0 + ENTRY);
+    assert_eq!(env.balance(&f.b.token), b0 + ENTRY);
+    // Win/Forfeit stay blocked while paused.
+    let g = {
+        let a = env.player(ENTRY * 3);
+        let b = env.player(ENTRY * 3);
+        env.set_paused(false).unwrap();
+        env.create_match(&a, 7, ENTRY).unwrap();
+        let m = match_pda(&a.key(), 7);
+        env.join_match(&b, &m).unwrap();
+        env.start_match(&m).unwrap();
+        env.set_paused(true).unwrap();
+        Fixture { a, b, m }
+    };
+    assert_code(
+        env.submit_signed(&g, ResultKind::Win, g.a.key()),
+        code(arenachain::errors::ArenaError::Paused),
+    );
+}

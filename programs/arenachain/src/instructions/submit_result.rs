@@ -90,7 +90,11 @@ pub fn handle_submit_result(
     let now = Clock::get()?.unix_timestamp;
     let config = &ctx.accounts.config;
     let m = &ctx.accounts.arena_match;
-    require!(!config.paused, ArenaError::Paused);
+    // Pause blocks new payouts but never refunds, so a server-signed Void still goes through.
+    require!(
+        !config.paused || kind == ResultKind::Void,
+        ArenaError::Paused
+    );
     require!(now <= m.result_deadline, ArenaError::ResultDeadlinePassed);
     match kind {
         ResultKind::Void => require_keys_eq!(winner, Pubkey::default(), ArenaError::VoidWithWinner),
