@@ -32,3 +32,4 @@ app/.next/
 app/next-env.d.ts
 app/.data/
 app/.env*.local
+*.tsbuildinfo
