@@ -80,6 +80,8 @@ cp app/.env.example app/.env.local
 npm run app:build && npm run start -w app     # http://localhost:3000
 ```
 
+The simulated game server is off by default: uncomment `SIMULATED_SERVER=enabled` in `app/.env.local` for local demos only, and never enable it on a public deployment.
+
 The app's server side needs two devnet keypair files, referenced by path in `app/.env.local`: the treasury (funds the faucet, pays the simulated server's fees) and the registered game-server key. Those belong to the team. To run everything yourself, deploy your own copy to devnet (`solana program deploy`, then `npm run devnet:init`) and register your own server key.
 
 > **`SIMULATED_SERVER=enabled`** turns on the "Simulated CS2 server" buttons. While it's on, **anyone who can reach the app can make the server sign a result** for any live match assigned to the demo server key. That is the point of the demo, and it's why the flag is opt-in. Never enable it on a public deployment or with a real result-service key.
