@@ -7,6 +7,7 @@ Next.js app for the devnet deployment in `../deployments/devnet.json`. Players c
 ```bash
 npm install                        # from the repo root (npm workspaces)
 cp app/.env.example app/.env.local # key *paths* for the treasury and the game server
+# For local demos only: uncomment SIMULATED_SERVER=enabled in app/.env.local to turn on the server buttons.
 npm run app:build && npm run start -w app   # http://localhost:3000
 ```
 
@@ -45,7 +46,8 @@ cd app && npx tsx scripts/verify-devnet.ts
 **Before recording**
 1. Two Chrome profiles, e.g. "Player A" and "Player B", each with Phantom installed and a **new** wallet (fresh wallets haven't used their daily faucet claim).
 2. In each Phantom: Settings → Developer settings → Testnet mode on → Solana Devnet.
-3. Start the app, open `http://localhost:3000` in both profiles, and place the windows side by side.
+3. In `app/.env.local`, uncomment `SIMULATED_SERVER=enabled` (it's off by default; local demos only, never a public deployment). Without it the simulated server's buttons return "turned off".
+4. Start the app, open `http://localhost:3000` in both profiles, and place the windows side by side.
 
 **The take**
 1. **A**: Connect wallet → Phantom → Connect. Click **Get 20 test USDC**, then click **View on Explorer** in the toast to show the transfer.
