@@ -33,7 +33,8 @@ Follow the `solana-dev` skill (`.claude/skills/solana-dev`) for Solana patterns.
 - Regenerate the Codama client: `npm run generate` (writes `clients/js/src/generated`; never hand-edit it)
 - Typecheck TS: `npm run typecheck`
 - Devnet (deployment record in `deployments/devnet.json`; wallet `DEVNET_WALLET`, default `~/.config/solana/arenachain-devnet.json`): `npm run devnet:status` (read-only), `npm run devnet:init` (one-time Config init, dry run unless `-- --yes`), `npm run devnet:e2e` (full match with a real payout; throwaway player keys are saved in `~/.config/solana/arenachain-devnet-e2e/` and their SOL is swept back on the next run)
-- Add frontend and result-service commands here as those packages are scaffolded.
+- Demo app (`app/`, npm workspace; setup in `app/README.md`): `npm run app:dev` or `npm run app:build && npm run start -w app`; verify against devnet with `cd app && npx tsx scripts/verify-devnet.ts` while it runs. Server keys come from paths in `app/.env.local` and must stay in `app/lib/server/*` (`server-only`).
+- Add result-service commands here once that package is scaffolded.
 
 ## Rules the program must enforce
 

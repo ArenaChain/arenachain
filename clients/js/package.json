@@ -1,0 +1,13 @@
+{
+  "name": "@arenachain/client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Codama-generated Kit client for the ArenaChain program, plus the server-signed result helpers.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@solana/kit": "^8.4.0"
+  }
+}
