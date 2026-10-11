@@ -4,6 +4,7 @@ import { address as toAddress } from '@solana/kit';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { GameModes } from '@/components/GameModes';
 import { MatchRow } from '@/components/match';
 import { createMatchIx, joinMatchIx } from '@/lib/actions';
 import { HOLD_THRESHOLD } from '@/lib/deployment';
@@ -63,8 +64,10 @@ export default function MatchesPage() {
                 </p>
             </section>
 
+            <GameModes />
+
             <section className="panel create">
-                <h2>Create a match</h2>
+                <h2>Create a CS2 1v1 match</h2>
                 <div className="create-row">
                     <label className="field">
                         <span>Entry fee (test USDC)</span>

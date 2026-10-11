@@ -450,6 +450,75 @@ p {
     color: var(--paid);
 }
 
+/* ---------- game modes ---------- */
+
+.modes-title {
+    font-size: 1.15rem;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+}
+.modes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
+}
+.mode {
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem 1rem;
+    display: grid;
+    align-content: start;
+    gap: 0.3rem;
+}
+.mode-live {
+    background: var(--panel);
+    border: 1px solid var(--text);
+}
+.mode-soon {
+    border: 1px dashed var(--line);
+    color: var(--muted);
+    cursor: default;
+}
+.mode-tag {
+    justify-self: start;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 99px;
+    padding: 0 0.55rem;
+    border: 1px solid currentColor;
+}
+.mode-live .mode-tag {
+    color: var(--bg);
+    background: var(--text);
+    border-color: var(--text);
+}
+.mode-name {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    line-height: 1.15;
+}
+.mode-soon .mode-name {
+    color: #b5c0cc;
+}
+.mode-line {
+    font-size: 0.88rem;
+    line-height: 1.4;
+}
+.mode-live .mode-line {
+    color: var(--muted);
+}
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
 /* ---------- matches ---------- */
 
 .create-row {
@@ -891,6 +960,12 @@ p {
     }
     .match-row-main {
         flex-wrap: wrap;
+    }
+    .modes {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .mode-live {
+        grid-column: 1 / -1;
     }
     .board th:nth-child(n + 6),
     .board td:nth-child(n + 6) {
