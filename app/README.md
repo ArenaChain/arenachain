@@ -19,6 +19,8 @@ npm run app:build && npm run start -w app   # http://localhost:3000
 
 Both are checked against the public addresses in `deployments/devnet.json` at startup and never reach the browser (`server-only` modules; the build fails if one is imported client-side).
 
+`SIMULATED_SERVER=enabled` turns on the simulated server's signing route. While it's on, **anyone who can reach the app can sign a result for any live match assigned to the demo server key**, which is what the demo buttons are for. Keep it to local demos and devnet, and never use a real result-service key with it.
+
 ## What's where
 
 | Page | |
