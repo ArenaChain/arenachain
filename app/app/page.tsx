@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import useSWR from 'swr';
 
+import { apiJson } from '@/app/providers';
 import { useToast } from '@/components/Toasts';
 import { createProfileIx } from '@/lib/actions';
 import { formatSol, formatUsdc, short } from '@/lib/format';
@@ -41,15 +42,15 @@ function FaucetButton({ wallet, onDone }: { wallet: string; onDone: () => void }
     async function claim() {
         setBusy(true);
         try {
-            const res = await fetch('/api/faucet', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ wallet }),
-            });
-            const body = await res.json();
-            if (res.status === 429)
-                throw new Error(`Already claimed. Try again ${new Date(body.retryAt).toLocaleString()}.`);
-            if (!res.ok) throw new Error(body.error ?? 'The faucet failed.');
+            const { status, data: body } = await apiJson<{
+                retryAt?: number;
+                usdc: string;
+                sol: string;
+                signature: string;
+            }>('/api/faucet', { wallet });
+            if (status === 429)
+                throw new Error(`Already claimed. Try again ${new Date(body.retryAt!).toLocaleString()}.`);
+            if (status >= 400) throw new Error(body.error ?? "The faucet couldn't send test USDC. Try again.");
             const sol = BigInt(body.sol) > 0n ? ` and ${formatSol(body.sol)} SOL for fees` : '';
             toast({
                 tone: 'ok',

@@ -11,11 +11,16 @@ export const useToast = () => useContext(Ctx);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([]);
-    const push = useCallback((t: Omit<Toast, 'id'>) => {
-        const id = Date.now() + Math.random();
-        setToasts((all) => [...all.slice(-3), { ...t, id }]);
-        setTimeout(() => setToasts((all) => all.filter((x) => x.id !== id)), t.tone === 'error' ? 12000 : 9000);
-    }, []);
+    const dismiss = useCallback((id: number) => setToasts((all) => all.filter((x) => x.id !== id)), []);
+    const push = useCallback(
+        (t: Omit<Toast, 'id'>) => {
+            const id = Date.now() + Math.random();
+            setToasts((all) => [...all.slice(-3), { ...t, id }]);
+            // A toast with a transaction keeps its Explorer link on screen until it's closed.
+            if (!t.signature) setTimeout(() => dismiss(id), t.tone === 'error' ? 12000 : 8000);
+        },
+        [dismiss],
+    );
     return (
         <Ctx.Provider value={push}>
             {children}
@@ -25,9 +30,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         <span>{t.title}</span>
                         {t.signature && (
                             <a href={explorerTx(t.signature)} target="_blank" rel="noreferrer">
-                                View on Explorer
+                                View transaction on Solana Explorer (devnet)
                             </a>
                         )}
+                        <button className="toast-close" onClick={() => dismiss(t.id)} aria-label="Close">
+                            ×
+                        </button>
                     </div>
                 ))}
             </div>

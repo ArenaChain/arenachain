@@ -18,11 +18,33 @@ export const client = createClient()
 
 export type AppClient = Awaited<typeof client>;
 
+/** Calls the app's API. Errors always come back as one readable sentence. */
+export async function apiJson<T>(
+    url: string,
+    body?: unknown,
+): Promise<{ status: number; data: T & { error?: string } }> {
+    let res: Response;
+    try {
+        res = await fetch(url, {
+            cache: 'no-store',
+            ...(body === undefined
+                ? {}
+                : { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }),
+        });
+    } catch {
+        throw new Error("Can't reach the ArenaChain server. Check that it's running and try again.");
+    }
+    try {
+        return { status: res.status, data: await res.json() };
+    } catch {
+        throw new Error(`The ArenaChain server had a problem (HTTP ${res.status}). Try again in a moment.`);
+    }
+}
+
 export async function fetchJson<T>(url: string): Promise<T> {
-    const res = await fetch(url, { cache: 'no-store' });
-    const body = await res.json();
-    if (!res.ok) throw new Error(body.error ?? `Request failed (${res.status})`);
-    return body as T;
+    const { status, data } = await apiJson<T>(url);
+    if (status >= 400) throw new Error(data.error ?? `The ArenaChain server had a problem (HTTP ${status}).`);
+    return data;
 }
 
 export function Providers({ children }: { children: ReactNode }) {

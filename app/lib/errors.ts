@@ -39,14 +39,24 @@ export function explainError(e: unknown): string {
         return 'Not enough devnet SOL for fees. Use "Get test USDC", which also tops up a little SOL.';
     if (/custom program error: 0x1\b|"code":1\b|InsufficientFunds|insufficient funds/i.test(text))
         return 'Not enough test USDC. Use "Get test USDC" first.';
-    const code = text.match(/custom program error: 0x([0-9a-f]+)/i)?.[1] ?? text.match(/"code":(\d{4})/)?.[1];
-    if (code) {
-        const n = text.includes('0x') && /custom program error/.test(text) ? parseInt(code, 16) : Number(code);
+    const hex = text.match(/custom program error: 0x([0-9a-f]+)/i)?.[1];
+    const dec = text.match(/"code":(\d{4})/)?.[1];
+    const n = hex ? parseInt(hex, 16) : dec ? Number(dec) : null;
+    if (n != null) {
         if (PROGRAM_MESSAGES[n]) return PROGRAM_MESSAGES[n];
         if (ANCHOR_MESSAGES[n]) return ANCHOR_MESSAGES[n];
     }
+    const code = n == null ? null : String(n);
     if (/already in use/i.test(text)) return 'That account already exists.';
     if (/429|Too Many Requests/i.test(text)) return 'Devnet RPC is rate-limiting. Wait a few seconds and try again.';
-    if (/blockhash/i.test(text)) return 'The transaction expired before it landed. Try again.';
-    return walk(e).find(Boolean)?.slice(0, 200) ?? 'Something went wrong.';
+    if (/blockhash|not confirmed|timed? ?out/i.test(text))
+        return 'The transaction expired before it landed. Try again.';
+    if (/no (wallet|signer)|not connected|wallet.*disconnected/i.test(text)) return 'Connect a wallet first.';
+    if (/failed to fetch|network ?error|ECONNREFUSED|fetch failed/i.test(text))
+        return "Can't reach the network. Check your connection and try again.";
+    if (code) return `The program rejected this transaction (error ${code}).`;
+    if (/simulat/i.test(text)) return 'The transaction would fail, so it was not sent. Refresh and try again.';
+    // Never show raw error dumps; keep the detail in the console for debugging.
+    if (typeof console !== 'undefined') console.error('Unrecognized error', e);
+    return 'Something went wrong. Refresh the page and try again.';
 }

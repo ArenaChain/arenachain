@@ -15,6 +15,9 @@ export function Nav() {
     const path = usePathname();
     return (
         <header className="nav">
+            <div className="demo-banner" role="note">
+                Devnet demo · test USDC · no real money
+            </div>
             <div className="nav-inner">
                 <Link href="/" className="brand">
                     <span className="brand-mark" aria-hidden>

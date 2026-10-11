@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
 import { useSWRConfig } from 'swr';
 
+import { apiJson } from '@/app/providers';
 import { useToast } from '@/components/Toasts';
 import { explorerAddress, explorerTx, formatUsdc, isExpired, short } from '@/lib/format';
 import type { MatchDetail, MatchStatusName, MatchView, ProfileView } from '@/lib/types';
@@ -193,13 +194,11 @@ export function ServerPanel({ detail }: { detail: MatchDetail }) {
     async function run(action: Action, done: string) {
         setBusy(action);
         try {
-            const res = await fetch('/api/server', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ match: detail.match.address, action }),
+            const { status, data: body } = await apiJson<{ signature: string }>('/api/server', {
+                match: detail.match.address,
+                action,
             });
-            const body = await res.json();
-            if (!res.ok) throw new Error(body.error ?? 'The server refused.');
+            if (status >= 400) throw new Error(body.error ?? "The simulated server couldn't sign this. Try again.");
             toast({ tone: 'ok', title: done, signature: body.signature });
             await Promise.all([mutate(`/api/match/${detail.match.address}`), mutate('/api/matches')]);
         } catch (e) {
