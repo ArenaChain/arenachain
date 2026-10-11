@@ -1,0 +1,37 @@
+{
+  "cluster": "devnet",
+  "programId": "HzNHCFVGQu9SKEeAo1UPLV5itD7TSYGoVtmYz4MJeKsw",
+  "programData": "4nMKT4uESArNbTSrWpngDLW8vMFF91mRcWdJ3GoqBkAv",
+  "upgradeAuthority": "4PHjmaBZRkcLpfHm9XW5cBeKpr3WpkMgUtxacUiYwMTW",
+  "deploySignature": "5bqaVDRKpQJsLWfgSv5xVxxuUA1VnGrqU1v6migzSXrnG3fgEYs5ekie8Li89XM6PYck31n2TTqiDWas5anwPZZT",
+  "deployedSlot": 509876501,
+  "usdcMint": "5NRRbpNy1DD74qhZZt8MBZ1CY3S3qvJVCF9mFYuHMSt3",
+  "usdcMintSignature": "4gLzo9TA36xqCsi4VrEXHc9F4inqx4SBs1bBXUUBqNMCTvn5b9b2WKja1byX3f21Z1swmMU3FrRTvKqVzR4ovkVc",
+  "treasury": "4PHjmaBZRkcLpfHm9XW5cBeKpr3WpkMgUtxacUiYwMTW",
+  "treasuryUsdcAccount": "HydUmAt6LFxvvwfiJNpAmd7S3DkW71cpxgnYgi4HMDhe",
+  "config": "GnRLpE13TYbdLnnHyg3t4eTBcrM5zdyt2gLNneGAcEp3",
+  "feeVault": "GxbTWRjFyWZHTy4MNusqB5Grwh1kddDPL5PxKEXzRS1p",
+  "configInitSignature": "4Aod7ApHXL1x1T8SY31assfzagdyD15x48VqcFpwy5QxF7PhjdKXxpL9b2v7MexGEkGjEKDUE8YuL5gaDnZwykoj",
+  "configParams": {
+    "holdThreshold": "250000000",
+    "holdSecs": "86400",
+    "resultWindowSecs": "7200"
+  },
+  "gameServer": {
+    "signerKey": "8KgAwUyV8uBTwbvbqRVnTZv1SMh2uBJqVDkc2Uu3ZGVV",
+    "account": "6ob8FMqoQ7ZfDcjwvBhMf3jpFj1SUkskudfGTEWfex48"
+  },
+  "e2e": {
+    "match": "DkJ5AvY8Vw9ebuxkC8YmqW8VWjycn1Wt7wWNzrmnCAoR",
+    "playerA": "6nXNPX65jsQmE7c66aiRYrzUA58WrebkjJRZWMEYZVNL",
+    "playerB": "GB6zCxShGURYNqDgnPszgwbXxodVSqRGGh3vzxEjGC5e",
+    "payoutSignature": "2gRqaWdM9HFXNwJkd3UeWDqreX1xJCVevYVmwV7e7vrXYnanAr1RE3RR7L9kCpnVFzS2ffoLy4HcEkU3JfbzcbTJ",
+    "checks": {
+      "match settled & paid": true,
+      "winner B got pool - 5% fee": true,
+      "loser A paid entry only": true,
+      "fee vault +5%": true,
+      "vault closed": true
+    }
+  }
+}

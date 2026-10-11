@@ -6,7 +6,13 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["clients/js/src", "tests/**/*.ts"]
+  "include": [
+    "clients/js/src",
+    "tests/**/*.ts",
+    "scripts/**/*.ts"
+  ]
 }

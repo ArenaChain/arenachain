@@ -32,6 +32,7 @@ Follow the `solana-dev` skill (`.claude/skills/solana-dev`) for Solana patterns.
 - Test: `anchor test` (LiteSVM tests via `cargo test -p arenachain`, then the Surfpool e2e via `npm run test:e2e`; both need a fresh `anchor build`)
 - Regenerate the Codama client: `npm run generate` (writes `clients/js/src/generated`; never hand-edit it)
 - Typecheck TS: `npm run typecheck`
+- Devnet (deployment record in `deployments/devnet.json`; wallet `DEVNET_WALLET`, default `~/.config/solana/arenachain-devnet.json`): `npm run devnet:status` (read-only), `npm run devnet:init` (one-time Config init, dry run unless `-- --yes`), `npm run devnet:e2e` (full match with a real payout; throwaway player keys are saved in `~/.config/solana/arenachain-devnet-e2e/` and their SOL is swept back on the next run)
 - Add frontend and result-service commands here as those packages are scaffolded.
 
 ## Rules the program must enforce
