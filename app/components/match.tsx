@@ -31,17 +31,19 @@ export function StatusChip({ status, expired = false }: { status: MatchStatusNam
 export function StatusTrack({ status }: { status: MatchStatusName }) {
     const at = STEP_INDEX[status];
     return (
-        <ol className="track" aria-label={`Match status: ${statusLabel(status)}`}>
+        <ol className="stepper" aria-label={`Match status: ${statusLabel(status)}`}>
             {STEPS.map((step, i) => {
-                const name = i === 3 && status === 'Refunded' ? 'Refunded' : step;
+                const refunded = i === 3 && status === 'Refunded';
+                const name = refunded ? 'Refunded' : step;
                 const state = i < at ? 'done' : i === at ? 'current' : 'todo';
                 return (
                     <li
                         key={step}
-                        className={`track-step ${state} ${i === 3 && status === 'Refunded' ? 'refunded' : ''}`}
+                        className={`step ${state} ${refunded ? 'refunded' : ''} ${i === 3 && status === 'Settled' ? 'settled' : ''}`}
+                        aria-current={state === 'current' ? 'step' : undefined}
                     >
-                        <span className="track-bar" />
-                        <span className="track-name">{name}</span>
+                        <span className="step-dot" aria-hidden="true" />
+                        <span className="step-name">{name}</span>
                     </li>
                 );
             })}
@@ -81,10 +83,12 @@ function Side({
                         {short(wallet)}
                     </a>
                     <span className="side-meta">
-                        {profile ? `${profile.elo} rating` : 'No profile'}
+                        {profile ? <span className="num">{profile.elo} rating</span> : 'No profile'}
                         {you && <em className="you">You</em>}
                     </span>
-                    {winner && <span className="side-win">Winner{payout ? ` +${formatUsdc(payout)} USDC` : ''}</span>}
+                    {winner && (
+                        <span className="side-win num">Winner{payout ? ` +${formatUsdc(payout)} USDC` : ''}</span>
+                    )}
                 </>
             ) : (
                 <span className="side-waiting">Waiting for an opponent</span>
@@ -93,35 +97,46 @@ function Side({
     );
 }
 
+/** The match page hero: A (amber) vs B (cyan), the pool in the middle, and the status stepper. */
 export function Scoreboard({ detail, me }: { detail: MatchDetail; me: string | null }) {
     const { match: m, profiles, settlement } = detail;
     const pool = BigInt(m.entryFee) * 2n;
     const winnerPayout = settlement && settlement.refundEach == null ? settlement.payout : null;
     return (
-        <section className="scoreboard">
-            <Side
-                side="a"
-                wallet={m.playerA}
-                profile={profiles[m.playerA]}
-                you={me === m.playerA}
-                winner={m.winner === m.playerA}
-                payout={winnerPayout}
-            />
-            <div className="pot">
-                <span className="pot-amount">{formatUsdc(pool)}</span>
-                <span className="pot-label">USDC pool</span>
-                <span className="pot-entry">{formatUsdc(m.entryFee)} entry each</span>
+        <section className="glass scoreboard-card">
+            <div className="scoreboard">
+                <Side
+                    side="a"
+                    wallet={m.playerA}
+                    profile={profiles[m.playerA]}
+                    you={me === m.playerA}
+                    winner={m.winner === m.playerA}
+                    payout={winnerPayout}
+                />
+                <div className="versus">
+                    <span className="vs-big" aria-hidden="true">
+                        VS
+                    </span>
+                    <span className="pot-amount num">{formatUsdc(pool)}</span>
+                    <span className="pot-label">USDC pool</span>
+                    <span className="pot-entry num">{formatUsdc(m.entryFee)} entry each</span>
+                </div>
+                <Side
+                    side="b"
+                    wallet={m.playerB}
+                    profile={m.playerB ? profiles[m.playerB] : null}
+                    you={me != null && me === m.playerB}
+                    winner={m.winner != null && m.winner === m.playerB}
+                    payout={winnerPayout}
+                />
             </div>
-            <Side
-                side="b"
-                wallet={m.playerB}
-                profile={m.playerB ? profiles[m.playerB] : null}
-                you={me != null && me === m.playerB}
-                winner={m.winner != null && m.winner === m.playerB}
-                payout={winnerPayout}
-            />
+            <StatusTrack status={m.status} />
         </section>
     );
+}
+
+export function ScoreboardSkeleton() {
+    return <div className="glass scoreboard-card skeleton-card skeleton-hero" aria-hidden="true" />;
 }
 
 // ---------- settlement ----------
@@ -134,7 +149,7 @@ export function SettlementPanel({ detail }: { detail: MatchDetail }) {
         .find((t) => t.label === 'Server-signed result' || t.label === 'Held payout claimed');
     const winnerSide = m.winner === m.playerA ? 'A' : 'B';
     return (
-        <section className="panel settlement">
+        <section className="glass card settlement">
             <h2>{m.resultKind === 'Void' ? 'Refunded' : `Player ${winnerSide} won`}</h2>
             <p className="muted">
                 {m.resultKind === 'Win' && 'Server-signed result. The winner takes the pool minus the 5% fee.'}
@@ -146,22 +161,22 @@ export function SettlementPanel({ detail }: { detail: MatchDetail }) {
             <dl className="money">
                 <div>
                     <dt>Pool</dt>
-                    <dd>{formatUsdc(s.pool)} USDC</dd>
+                    <dd className="num">{formatUsdc(s.pool)} USDC</dd>
                 </div>
                 {s.refundEach ? (
                     <div>
                         <dt>Refunded to each player</dt>
-                        <dd className="paid">{formatUsdc(s.refundEach)} USDC</dd>
+                        <dd className="paid num">{formatUsdc(s.refundEach)} USDC</dd>
                     </div>
                 ) : (
                     <>
                         <div>
                             <dt>{m.resultKind === 'Forfeit' ? 'Fee (waived on forfeit)' : 'Fee (5%)'}</dt>
-                            <dd>{formatUsdc(s.fee)} USDC</dd>
+                            <dd className="num">{formatUsdc(s.fee)} USDC</dd>
                         </div>
                         <div>
                             <dt>Payout to player {winnerSide}</dt>
-                            <dd className="paid">{formatUsdc(s.payout)} USDC</dd>
+                            <dd className="paid num">{formatUsdc(s.payout)} USDC</dd>
                         </div>
                     </>
                 )}
@@ -173,7 +188,7 @@ export function SettlementPanel({ detail }: { detail: MatchDetail }) {
                 </p>
             )}
             {payoutTx && (
-                <a className="btn btn-outline" href={explorerTx(payoutTx.signature)} target="_blank" rel="noreferrer">
+                <a className="btn btn-glass" href={explorerTx(payoutTx.signature)} target="_blank" rel="noreferrer">
                     View payout on Explorer
                 </a>
             )}
@@ -211,15 +226,18 @@ export function ServerPanel({ detail }: { detail: MatchDetail }) {
     const live = s === 'InProgress';
     const finished = s === 'Settled' || s === 'Refunded' || s === 'Disputed';
     const expired = isExpired(detail.match, detail.now);
-    const btn = (action: Action, label: string, done: string, enabled: boolean, cls = 'btn-server') => (
+    const btn = (action: Action, label: string, done: string, enabled: boolean, cls = 'btn-glass') => (
         <button className={`btn ${cls}`} disabled={!enabled || busy != null} onClick={() => run(action, done)}>
             {busy === action ? 'Signing…' : label}
         </button>
     );
 
     return (
-        <section className="panel server" aria-labelledby="server-title">
-            <h2 id="server-title">Simulated CS2 server</h2>
+        <section className="glass card server" aria-labelledby="server-title">
+            <div className="server-head">
+                <h2 id="server-title">Simulated CS2 server</h2>
+                <span className="server-tag">Simulated</span>
+            </div>
             <p className="muted">
                 Stands in for the MatchZy result service on a real CS2 server. It holds the game-server key on the
                 backend and signs each result with Ed25519; the program pays out only if that signature checks out.
@@ -233,8 +251,8 @@ export function ServerPanel({ detail }: { detail: MatchDetail }) {
             {!finished && !expired && (
                 <div className="server-actions">
                     {btn('start', 'Start match', 'Match started', s === 'Full', 'btn-primary')}
-                    {btn('win-a', 'Player A wins', 'Result signed: A wins', live, 'btn-server btn-a')}
-                    {btn('win-b', 'Player B wins', 'Result signed: B wins', live, 'btn-server btn-b')}
+                    {btn('win-a', 'Player A wins', 'Result signed: A wins', live, 'btn-glass btn-a')}
+                    {btn('win-b', 'Player B wins', 'Result signed: B wins', live, 'btn-glass btn-b')}
                     {btn('forfeit-a', 'A forfeits (left)', 'Forfeit signed: A left', live)}
                     {btn('forfeit-b', 'B forfeits (left)', 'Forfeit signed: B left', live)}
                     {btn('void', 'Void (server crash)', 'Void signed: both refunded', live)}
@@ -253,21 +271,51 @@ export function ServerPanel({ detail }: { detail: MatchDetail }) {
 
 // ---------- lists ----------
 
-export function MatchRow({ m, me, now, action }: { m: MatchView; me: string | null; now: number; action?: ReactNode }) {
+/** A match as a card: entry, pool, players, status, and an optional action. */
+export function MatchCard({
+    m,
+    me,
+    now,
+    action,
+}: {
+    m: MatchView;
+    me: string | null;
+    now: number;
+    action?: ReactNode;
+}) {
     const mine = me != null && (me === m.playerA || me === m.playerB);
+    const pool = BigInt(m.entryFee) * 2n;
     return (
-        <li className="match-row">
-            <Link href={`/match/${m.address}`} className="match-row-main">
-                <span className="match-entry">{formatUsdc(m.entryFee)} USDC</span>
-                <span className="match-players">
-                    <span className="pa">{short(m.playerA)}</span>
-                    <span className="vs">vs</span>
-                    <span className="pb">{m.playerB ? short(m.playerB) : 'open slot'}</span>
-                </span>
-                {mine && <em className="you">You</em>}
+        <li className="match-card">
+            <Link href={`/match/${m.address}`} className="match-card-main">
+                <div className="match-card-money">
+                    <span className="match-entry num">{formatUsdc(m.entryFee)}</span>
+                    <span className="match-entry-label">USDC entry</span>
+                </div>
+                <div className="match-card-body">
+                    <span className="match-players">
+                        <span className="pa">{short(m.playerA)}</span>
+                        <span className="vs">vs</span>
+                        <span className="pb">{m.playerB ? short(m.playerB) : 'open seat'}</span>
+                        {mine && <em className="you">You</em>}
+                    </span>
+                    <span className="match-pool muted small num">Pool {formatUsdc(pool)} USDC</span>
+                </div>
                 <StatusChip status={m.status} expired={isExpired(m, now)} />
             </Link>
-            {action}
+            {action && <div className="match-card-action">{action}</div>}
         </li>
+    );
+}
+
+export function MatchListSkeleton({ rows = 3 }: { rows?: number }) {
+    return (
+        <ul className="match-list" aria-hidden="true">
+            {Array.from({ length: rows }, (_, i) => (
+                <li key={i} className="match-card skeleton-row">
+                    <span className="skeleton" />
+                </li>
+            ))}
+        </ul>
     );
 }

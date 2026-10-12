@@ -4,7 +4,7 @@ import { address as toAddress } from '@solana/kit';
 import Link from 'next/link';
 import { use } from 'react';
 
-import { Scoreboard, ServerPanel, SettlementPanel, StatusChip, StatusTrack } from '@/components/match';
+import { Scoreboard, ScoreboardSkeleton, ServerPanel, SettlementPanel, StatusChip } from '@/components/match';
 import { cancelMatchIx, joinMatchIx, refundExpiredIx } from '@/lib/actions';
 import { explorerAddress, explorerTx, formatUsdc, isExpired, timeAgo } from '@/lib/format';
 import { useMatchDetail, useWallet, useWalletView } from '@/lib/hooks';
@@ -13,7 +13,7 @@ import { useSendTx } from '@/lib/useSendTx';
 function Deadline({ label, at, now }: { label: string; at: number; now: number }) {
     const left = at - now;
     return (
-        <p className="muted small">
+        <p className="deadline muted small">
             {label} {left > 0 ? `in ${Math.ceil(left / 60)} min` : 'has passed: anyone can refund both players'}
         </p>
     );
@@ -28,12 +28,24 @@ export default function MatchPage({ params }: { params: Promise<{ address: strin
 
     if (error)
         return (
-            <section className="panel">
+            <section className="glass card">
                 <h2>Match not available</h2>
                 <p className="muted">{error.message}</p>
+                <Link href="/matches" className="btn btn-glass">
+                    Back to matches
+                </Link>
             </section>
         );
-    if (!data) return <p className="muted">Loading match…</p>;
+    if (!data)
+        return (
+            <>
+                <div className="match-head">
+                    <span className="skeleton skeleton-chip" aria-hidden="true" />
+                </div>
+                <ScoreboardSkeleton />
+                <div className="glass card skeleton-card" aria-hidden="true" />
+            </>
+        );
     const m = data.match;
 
     const canJoin = m.status === 'Open' && me != null && me !== m.playerA;
@@ -56,7 +68,7 @@ export default function MatchPage({ params }: { params: Promise<{ address: strin
         <>
             <div className="match-head">
                 <Link href="/matches" className="back">
-                    All matches
+                    ← All matches
                 </Link>
                 <StatusChip status={m.status} expired={expired} />
                 <a className="muted small" href={explorerAddress(m.address)} target="_blank" rel="noreferrer">
@@ -65,10 +77,16 @@ export default function MatchPage({ params }: { params: Promise<{ address: strin
             </div>
 
             <Scoreboard detail={data} me={me} />
-            <StatusTrack status={m.status} />
+
+            {!expired && m.status === 'Full' && (
+                <Deadline label="The server must start the match" at={m.startDeadline} now={data.now} />
+            )}
+            {!expired && m.status === 'InProgress' && (
+                <Deadline label="The result is due" at={m.resultDeadline} now={data.now} />
+            )}
 
             {(canJoin || canCancel) && (
-                <section className="panel actions">
+                <section className="glass card actions">
                     {canJoin && (
                         <>
                             <p>
@@ -97,7 +115,7 @@ export default function MatchPage({ params }: { params: Promise<{ address: strin
             )}
 
             {expired && (
-                <section className="panel actions">
+                <section className="glass card actions">
                     <p>
                         Nothing settled before the deadline, so the escrow can&apos;t stay locked: anyone can send both
                         entries back. No fee is taken.
@@ -112,17 +130,10 @@ export default function MatchPage({ params }: { params: Promise<{ address: strin
                 </section>
             )}
 
-            {!expired && m.status === 'Full' && (
-                <Deadline label="The server must start the match" at={m.startDeadline} now={data.now} />
-            )}
-            {!expired && m.status === 'InProgress' && (
-                <Deadline label="The result is due" at={m.resultDeadline} now={data.now} />
-            )}
-
-            <SettlementPanel detail={data} />
             <ServerPanel detail={data} />
+            <SettlementPanel detail={data} />
 
-            <section className="panel">
+            <section className="glass card">
                 <h2>Transactions</h2>
                 {data.txs.length === 0 ? (
                     <p className="muted">No transactions yet.</p>
@@ -130,10 +141,11 @@ export default function MatchPage({ params }: { params: Promise<{ address: strin
                     <ol className="txs">
                         {data.txs.map((t) => (
                             <li key={t.signature} className={t.ok ? '' : 'failed'}>
+                                <span className="tx-dot" aria-hidden="true" />
                                 <span className="tx-label">{t.label}</span>
                                 <span className="muted small">{t.blockTime ? timeAgo(t.blockTime) : ''}</span>
                                 <a href={explorerTx(t.signature)} target="_blank" rel="noreferrer">
-                                    Explorer
+                                    Explorer ↗
                                 </a>
                             </li>
                         ))}

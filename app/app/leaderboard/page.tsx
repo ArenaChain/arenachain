@@ -10,17 +10,16 @@ export default function LeaderboardPage() {
 
     return (
         <>
-            <section className="intro">
+            <section className="page-head">
                 <h1>Leaderboard</h1>
-                <p>
+                <p className="muted">
                     Every player profile on devnet, by rating. Ratings use integer Elo and update when a match settles.
                 </p>
             </section>
-            <section className="panel">
+            <section className="glass card board-card">
                 {error && <p className="muted">{error.message}</p>}
-                {!data && !error && <p className="muted">Loading players…</p>}
                 {data && players.length === 0 && <p className="muted">No players yet. Be the first.</p>}
-                {players.length > 0 && (
+                {(!data || players.length > 0) && !error && (
                     <table className="board">
                         <thead>
                             <tr>
@@ -30,36 +29,45 @@ export default function LeaderboardPage() {
                                     Rating
                                 </th>
                                 <th scope="col" className="num">
-                                    Wins
-                                </th>
-                                <th scope="col" className="num">
-                                    Losses
+                                    W / L
                                 </th>
                                 <th scope="col" className="num">
                                     Reputation
                                 </th>
-                                <th scope="col" className="num">
-                                    Forfeits
-                                </th>
                             </tr>
                         </thead>
                         <tbody>
-                            {players.map((p, i) => (
-                                <tr key={p.authority} className={p.authority === me ? 'me' : undefined}>
-                                    <td className="rank">{i + 1}</td>
-                                    <td>
-                                        <a href={explorerAddress(p.authority)} target="_blank" rel="noreferrer">
-                                            {short(p.authority)}
-                                        </a>
-                                        {p.authority === me && <em className="you">You</em>}
-                                    </td>
-                                    <td className="num rating-cell">{p.elo}</td>
-                                    <td className="num">{p.wins}</td>
-                                    <td className="num">{p.losses}</td>
-                                    <td className="num">{p.reputation}</td>
-                                    <td className="num">{p.totalForfeits}</td>
-                                </tr>
-                            ))}
+                            {!data
+                                ? Array.from({ length: 6 }, (_, i) => (
+                                      <tr key={i} aria-hidden="true">
+                                          <td colSpan={5}>
+                                              <span className="skeleton" />
+                                          </td>
+                                      </tr>
+                                  ))
+                                : players.map((p, i) => (
+                                      <tr
+                                          key={p.authority}
+                                          className={[i < 3 ? `top top-${i + 1}` : '', p.authority === me ? 'me' : '']
+                                              .filter(Boolean)
+                                              .join(' ')}
+                                      >
+                                          <td className="rank">
+                                              <span className="rank-badge num">{i + 1}</span>
+                                          </td>
+                                          <td>
+                                              <a href={explorerAddress(p.authority)} target="_blank" rel="noreferrer">
+                                                  {short(p.authority)}
+                                              </a>
+                                              {p.authority === me && <em className="you">You</em>}
+                                          </td>
+                                          <td className="num rating-cell">{p.elo}</td>
+                                          <td className="num">
+                                              {p.wins} / {p.losses}
+                                          </td>
+                                          <td className="num">{p.reputation}</td>
+                                      </tr>
+                                  ))}
                         </tbody>
                     </table>
                 )}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { GameModes } from '@/components/GameModes';
-import { MatchRow } from '@/components/match';
+import { MatchCard, MatchListSkeleton } from '@/components/match';
 import { createMatchIx, joinMatchIx } from '@/lib/actions';
 import { HOLD_THRESHOLD } from '@/lib/deployment';
 import { formatUsdc, parseUsdc } from '@/lib/format';
@@ -56,96 +56,117 @@ export default function MatchesPage() {
 
     return (
         <>
-            <section className="intro">
+            <section className="page-head">
                 <h1>Matches</h1>
-                <p>
+                <p className="muted">
                     Put up an entry fee and wait for an opponent, or take an open seat. The winner takes the pool minus
                     5%.
                 </p>
             </section>
 
-            <GameModes />
-
-            <section className="panel create">
-                <h2>Create a CS2 1v1 match</h2>
-                <div className="create-row">
-                    <label className="field">
-                        <span>Entry fee (test USDC)</span>
-                        <input
-                            inputMode="decimal"
-                            value={entry}
-                            onChange={(e) => setEntry(e.target.value)}
-                            aria-invalid={amount == null}
-                        />
-                    </label>
-                    <div className="quick" role="group" aria-label="Quick amounts">
-                        {QUICK.map((q) => (
-                            <button
-                                key={q}
-                                className={`btn btn-sm ${entry === q ? 'btn-selected' : 'btn-ghost'}`}
-                                onClick={() => setEntry(q)}
-                            >
-                                {q}
-                            </button>
-                        ))}
-                    </div>
-                    <button className="btn btn-primary" onClick={create} disabled={!!problem || isRunning}>
-                        {isRunning && !joining ? 'Confirm in wallet…' : 'Create match'}
-                    </button>
-                </div>
-                <p className="muted small">
-                    {problem ??
-                        `Pool ${formatUsdc((amount ?? 0n) * 2n)} USDC. ${
-                            amount != null && amount * 2n >= HOLD_THRESHOLD
-                                ? 'Pools this large are held for 24 h before payout.'
-                                : 'Paid out as soon as the server signs the result.'
-                        }`}
-                </p>
-            </section>
-
-            <section className="panel">
-                <h2>Open matches</h2>
-                {open.length === 0 ? (
-                    <p className="muted">No open matches. Create one above and invite a friend.</p>
-                ) : (
-                    <ul className="match-list">
-                        {open.map((m) => (
-                            <MatchRow
-                                key={m.address}
-                                m={m}
-                                me={address}
-                                now={data?.now ?? 0}
-                                action={
-                                    address && m.playerA !== address ? (
-                                        <button
-                                            className="btn btn-primary btn-sm"
-                                            disabled={isRunning || !w?.profile || balance < BigInt(m.entryFee)}
-                                            onClick={() => join(m.address)}
-                                        >
-                                            {joining === m.address
-                                                ? 'Confirm in wallet…'
-                                                : `Join for ${formatUsdc(m.entryFee)}`}
-                                        </button>
-                                    ) : null
-                                }
+            <div className="matches-grid">
+                <div className="matches-left">
+                    <section className="glass card create">
+                        <h2>Create a CS2 1v1 match</h2>
+                        <label className="field">
+                            <span>Entry fee (test USDC)</span>
+                            <input
+                                inputMode="decimal"
+                                value={entry}
+                                onChange={(e) => setEntry(e.target.value)}
+                                aria-invalid={amount == null}
                             />
-                        ))}
-                    </ul>
-                )}
-            </section>
+                        </label>
+                        <div className="quick" role="group" aria-label="Quick amounts">
+                            {QUICK.map((q) => (
+                                <button
+                                    key={q}
+                                    className={`btn btn-sm ${entry === q ? 'btn-selected' : 'btn-ghost'}`}
+                                    onClick={() => setEntry(q)}
+                                >
+                                    {q} USDC
+                                </button>
+                            ))}
+                        </div>
+                        <dl className="create-summary">
+                            <div>
+                                <dt>Pool</dt>
+                                <dd className="num">{formatUsdc((amount ?? 0n) * 2n)} USDC</dd>
+                            </div>
+                            <div>
+                                <dt>Winner gets</dt>
+                                <dd className="num">
+                                    {formatUsdc((amount ?? 0n) * 2n - ((amount ?? 0n) * 2n * 500n) / 10_000n)} USDC
+                                </dd>
+                            </div>
+                        </dl>
+                        <button
+                            className="btn btn-primary btn-block"
+                            onClick={create}
+                            disabled={!!problem || isRunning}
+                        >
+                            {isRunning && !joining ? 'Confirm in wallet…' : 'Create match'}
+                        </button>
+                        <p className="muted small create-note">
+                            {problem ??
+                                (amount != null && amount * 2n >= HOLD_THRESHOLD
+                                    ? 'Pools this large are held for 24 h before payout.'
+                                    : 'Paid out as soon as the server signs the result.')}
+                        </p>
+                    </section>
+                    <GameModes />
+                </div>
 
-            <section className="panel">
-                <h2>Live and recent</h2>
-                {rest.length === 0 ? (
-                    <p className="muted">Nothing yet.</p>
-                ) : (
-                    <ul className="match-list">
-                        {rest.map((m) => (
-                            <MatchRow key={m.address} m={m} me={address} now={data?.now ?? 0} />
-                        ))}
-                    </ul>
-                )}
-            </section>
+                <div className="matches-right">
+                    <section className="glass card">
+                        <h2>Open matches</h2>
+                        {!data ? (
+                            <MatchListSkeleton rows={2} />
+                        ) : open.length === 0 ? (
+                            <p className="muted">No open matches. Create one and invite a friend.</p>
+                        ) : (
+                            <ul className="match-list">
+                                {open.map((m) => (
+                                    <MatchCard
+                                        key={m.address}
+                                        m={m}
+                                        me={address}
+                                        now={data.now}
+                                        action={
+                                            address && m.playerA !== address ? (
+                                                <button
+                                                    className="btn btn-primary btn-sm"
+                                                    disabled={isRunning || !w?.profile || balance < BigInt(m.entryFee)}
+                                                    onClick={() => join(m.address)}
+                                                >
+                                                    {joining === m.address
+                                                        ? 'Confirm in wallet…'
+                                                        : `Join for ${formatUsdc(m.entryFee)}`}
+                                                </button>
+                                            ) : null
+                                        }
+                                    />
+                                ))}
+                            </ul>
+                        )}
+                    </section>
+
+                    <section className="glass card">
+                        <h2>Live and recent</h2>
+                        {!data ? (
+                            <MatchListSkeleton rows={4} />
+                        ) : rest.length === 0 ? (
+                            <p className="muted">Nothing yet.</p>
+                        ) : (
+                            <ul className="match-list">
+                                {rest.map((m) => (
+                                    <MatchCard key={m.address} m={m} me={address} now={data.now} />
+                                ))}
+                            </ul>
+                        )}
+                    </section>
+                </div>
+            </div>
         </>
     );
 }
