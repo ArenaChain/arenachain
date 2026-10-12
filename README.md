@@ -135,3 +135,5 @@ There has been **no external audit yet**. The tests, the demo app, the JS client
 - **Also not built yet:** dual confirmation (both players sign the same winner without the server) and Steam account linking.
 - **F1, ban bypass through pre-opened matches (low severity):** a forfeit ban doesn't block Open matches the banned player created before the ban, because joining checks only the joiner's ban and starting checks neither player. Escrow is not affected. Fix planned: check the creator's ban on join, and both players' bans on start.
 - **Accepted for the hackathon:** signed results don't name a cluster (replay across clusters is practically impossible but not excluded by design), and match accounts are never closed (about 0.003 SOL of rent each).
+
+License: MIT
