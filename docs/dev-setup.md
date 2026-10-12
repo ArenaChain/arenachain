@@ -1,10 +1,10 @@
 # Claude Code setup for ArenaChain
 
-Copy everything in this folder into the root of the ArenaChain repo. It gives Claude Code:
+These files in the repo root give Claude Code:
 
 | File | What it does |
 | --- | --- |
-| `.claude/skills/solana-dev/` | Solana Foundation's development skill: Anchor, `@solana/kit`, testing, security. Loads automatically in this repo. |
+| `.claude/skills/solana-dev/` | Solana Foundation's development skill: Anchor, `@solana/kit`, testing, security. Not committed: install it as described at the end of this file. |
 | `.mcp.json` | Solana Developer MCP: live Solana docs and an Anchor expert. |
 | `.claude/settings.json` | Turns on the security-guidance, claude-security, rust-analyzer-lsp and typescript-lsp plugins for everyone, pre-approves the Solana MCP, and sets `NO_DNA=1` so Anchor and Surfpool know an agent is running them. |
 | `.claude/claude-security-guidance.md`, `.claude/security-patterns.json` | ArenaChain's own security rules, used by security-guidance's reviews. |
@@ -23,4 +23,4 @@ Copy everything in this folder into the root of the ArenaChain repo. It gives Cl
 
 `/claude-security` scans use a lot of plan usage: run it once on the finished program before submitting. On Pro, turn on Dynamic workflows in `/config` first.
 
-The skill is vendored from [solana-foundation/solana-dev-skill](https://github.com/solana-foundation/solana-dev-skill) at commit `c614f82` (2026-10-07), MIT license. To update it, replace `.claude/skills/solana-dev` with `skills/solana-dev` from a fresh clone.
+The skill comes from [solana-foundation/solana-dev-skill](https://github.com/solana-foundation/solana-dev-skill) (MIT license); the project used commit `c614f82` (2026-10-07). It is in `.gitignore`, so install it locally: copy `skills/solana-dev` from a clone of that repo to `.claude/skills/solana-dev`.

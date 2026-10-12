@@ -62,7 +62,7 @@ All public addresses and signatures are in [`deployments/devnet.json`](deploymen
 
 ## Run it locally
 
-Requirements: Ubuntu 24.04+ (or WSL), Rust, Solana CLI 3.1.x, Anchor 1.1.2, Surfpool, Node 22+. `SETUP.md` has a one-shot installer.
+Requirements: Ubuntu 24.04+ (or WSL), Rust, Solana CLI 3.1.x, Anchor 1.1.2, Surfpool, Node 22+. [`docs/dev-setup.md`](docs/dev-setup.md) has a one-shot installer.
 
 **Program and tests** (no keys needed):
 
@@ -111,6 +111,7 @@ Several key checks were **mutation-tested**: the check was removed, the matching
 - **Admin is limited.** Config can only be initialized by the upgrade authority, so nobody can front-run it. The admin moves to a new key with a two-step handover. Fees can only be withdrawn to the configured treasury.
 - **Pre-submission adversarial review.** [`REVIEW.md`](REVIEW.md) lists every finding with its fix commit, including one critical bug: a player could lock both entry fees by reassigning their own wallet. It was fixed and is covered by regression tests.
 - **Keys stay server-side.** The demo app loads keys only in `server-only` modules, the client bundle was checked for leaks, and the simulated server is opt-in.
+- Built with Claude Code; [CLAUDE.md](CLAUDE.md) holds the project rules and security checklist the code was written against.
 
 ## Security review
 

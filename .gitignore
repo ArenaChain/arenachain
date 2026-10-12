@@ -19,6 +19,7 @@ id.json
 # Claude Code (personal overrides)
 .claude/settings.local.json
 .claude/claude-security-guidance.local.md
+.claude/skills/
 
 # OS
 .DS_Store
