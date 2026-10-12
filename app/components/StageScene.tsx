@@ -7,11 +7,11 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
-const BG = new THREE.Color('#050914');
-// Brand gradient: cyan-blue -> blue -> violet.
-const C1 = new THREE.Color('#0484DF');
-const C2 = new THREE.Color('#1E5FD6');
-const C3 = new THREE.Color('#5832EA');
+const BG = new THREE.Color('#040813'); // Void
+// Brand gradient: Azure -> Indigo -> Violet.
+const C1 = new THREE.Color('#0485E0');
+const C2 = new THREE.Color('#4448E7');
+const C3 = new THREE.Color('#5434ED');
 
 function brand(t: number, out: THREE.Color) {
     const k = Math.min(1, Math.max(0, t));
@@ -66,7 +66,7 @@ function StageRing() {
     useEffect(() => () => geometry.dispose(), [geometry]);
     return (
         <lineLoop geometry={geometry} position={[0, -3.9, -14]}>
-            <lineBasicMaterial color="#1E5FD6" transparent opacity={0.45} fog />
+            <lineBasicMaterial color="#1062B6" transparent opacity={0.5} fog />
         </lineLoop>
     );
 }
