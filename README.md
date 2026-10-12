@@ -112,6 +112,12 @@ Several key checks were **mutation-tested**: the check was removed, the matching
 - **Pre-submission adversarial review.** [`REVIEW.md`](REVIEW.md) lists every finding with its fix commit, including one critical bug: a player could lock both entry fees by reassigning their own wallet. It was fixed and is covered by regression tests.
 - **Keys stay server-side.** The demo app loads keys only in `server-only` modules, the client bundle was checked for leaks, and the simulated server is opt-in.
 
+## Security review
+
+An AI security scan (Claude Security: 18 researchers, then a 3-reviewer verification panel) of `programs/arenachain` at commit `6308dd1` found **no fund-safety issues**. It produced one low-severity finding, listed under [Known limitations](#known-limitations--roadmap) (F1).
+
+There has been **no external audit yet**. The tests, the demo app, the JS client and the devnet scripts have not been scanned yet. The earlier manual adversarial review and its fixes are in [`REVIEW.md`](REVIEW.md).
+
 ## What is simulated
 
 - **The game server.** No CS2 server or MatchZy integration is wired up yet. The "Simulated CS2 server" panel holds a registered game-server key on the app's backend and signs results with the same code the real result service will use (`clients/js/src/result.ts`). Everything after the signature is real: the on-chain verification, escrow, payout and ratings.
@@ -127,4 +133,5 @@ Several key checks were **mutation-tested**: the check was removed, the matching
 - **Multisig:** the upgrade authority and Config admin are still one devnet key. Before mainnet, both move to a Squads multisig (the two-step admin handover is already in the program).
 - **Gasless fees:** players currently pay a little SOL for rent and fees. Sponsored transactions would remove that step.
 - **Also not built yet:** dual confirmation (both players sign the same winner without the server) and Steam account linking.
+- **F1, ban bypass through pre-opened matches (low severity):** a forfeit ban doesn't block Open matches the banned player created before the ban, because joining checks only the joiner's ban and starting checks neither player. Escrow is not affected. Fix planned: check the creator's ban on join, and both players' bans on start.
 - **Accepted for the hackathon:** signed results don't name a cluster (replay across clusters is practically impossible but not excluded by design), and match accounts are never closed (about 0.003 SOL of rent each).
